@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eastern Gate — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --eg-green:#14432A;
+    --eg-green-dark:#0D2E1C;
+    --eg-green-light:#1F5C3B;
+    --eg-gold:#D9A441;
+    --eg-gold-dark:#B8842E;
+    --eg-rust:#C1502E;
+    --eg-bg:#FBF8F2;
+    --eg-surface:#FFFFFF;
+    --eg-text:#1C1B17;
+    --eg-muted:#6B6558;
+    --eg-border:#E4DFD1;
+    --eg-success:#2F7A4D;
+    --eg-success-bg:#E7F2EA;
+    --eg-error:#C0392B;
+    --eg-error-bg:#FBEAE7;
+    --eg-warn:#8A6416;
+    --eg-warn-bg:#FBF3DF;
+    --radius:12px;
+    --radius-sm:8px;
+    --sidebar-w:236px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--eg-text);
+    background:var(--eg-bg);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;font-weight:500;}
+  button{font-family:inherit;}
+
+  /* ================= Shell ================= */
+  .app{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:var(--sidebar-w);
+    flex-shrink:0;
+    background:linear-gradient(180deg,var(--eg-green-dark),var(--eg-green));
+    color:#EFE9D8;
+    display:flex;
+    flex-direction:column;
+    position:fixed;
+    top:0;left:0;bottom:0;
+  }
+  .sidebar-brand{
+    display:flex;align-items:center;gap:10px;
+    padding:22px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-brand .glyph{
+    width:30px;height:30px;border:2px solid var(--eg-gold);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(45deg);flex-shrink:0;
+  }
+  .sidebar-brand .glyph span{transform:rotate(-45deg);color:var(--eg-gold);font-family:'Fraunces',serif;font-weight:600;font-size:14px;}
+  .sidebar-brand .wordmark{font-family:'Fraunces',serif;font-size:16.5px;}
+
+  .nav{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px;}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 14px;
+    border-radius:var(--radius-sm);
+    color:#D9D2BC;
+    background:transparent;border:none;
+    cursor:pointer;
+    font-size:14.5px;font-weight:600;
+    text-align:left;
+    transition:background .15s ease,color .15s ease;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+  .nav-item.active{background:rgba(217,164,65,0.16);color:#fff;}
+  .nav-item .ic{width:18px;height:18px;flex-shrink:0;opacity:0.9;}
+  .nav-item.active .ic{opacity:1;}
+
+  .sidebar-foot{
+    padding:16px;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-foot button{
+    width:100%;
+    background:rgba(255,255,255,0.06);
+    color:#EFE9D8;
+    border:1px solid rgba(255,255,255,0.1);
+    padding:10px 12px;
+    border-radius:var(--radius-sm);
+    font-size:13.5px;font-weight:700;
+    cursor:pointer;
+  }
+  .sidebar-foot button:hover{background:rgba(255,255,255,0.12);}
+
+  .main{
+    margin-left:var(--sidebar-w);
+    flex:1;
+    display:flex;flex-direction:column;
+    min-width:0;
+  }
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;
+    background:var(--eg-surface);
+    border-bottom:1px solid var(--eg-border);
+    position:sticky;top:0;z-index:20;
+  }
+  .topbar h1{font-size:21px;}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .conn-pill{
+    display:flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:600;
+    color:var(--eg-muted);
+    background:#F1EDE2;
+    padding:6px 12px;border-radius:999px;
+  }
+  .conn-pill .dot{width:7px;height:7px;border-radius:50%;background:#B7ADC3;}
+  .conn-pill.offline .dot{background:var(--eg-rust);}
+  .admin-chip{
+    display:flex;align-items:center;gap:10px;
+    padding:6px 10px 6px 6px;
+    border-radius:999px;
+    background:#F1EDE2;
+  }
+  .admin-chip .av{
+    width:30px;height:30px;border-radius:50%;
+    background:var(--eg-green);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-size:13px;font-weight:600;
+  }
+  .admin-chip .name{font-size:13.5px;font-weight:700;}
+  .admin-chip .role{font-size:11.5px;color:var(--eg-muted);}
+
+  .content{padding:28px 32px 60px;flex:1;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ================= Reusable bits ================= */
+  .grid-stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:16px;
+    margin-bottom:24px;
+  }
+  .stat-card{
+    background:var(--eg-surface);
+    border:1px solid var(--eg-border);
+    border-radius:var(--radius);
+    padding:18px 18px 16px;
+  }
+  .stat-card .label{font-size:12.5px;font-weight:700;color:var(--eg-muted);text-transform:none;}
+  .stat-card .value{font-family:'Fraunces',serif;font-size:26px;margin-top:10px;color:var(--eg-text);}
+  .stat-card .value.muted{font-size:15px;color:#A79F8C;font-family:'Inter',sans-serif;font-weight:600;}
+
+  .panel{
+    background:var(--eg-surface);
+    border:1px solid var(--eg-border);
+    border-radius:var(--radius);
+    margin-bottom:22px;
+    overflow:hidden;
+  }
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 20px;
+    border-bottom:1px solid var(--eg-border);
+    flex-wrap:wrap;gap:10px;
+  }
+  .panel-head h2{font-size:17px;}
+  .panel-head .sub{font-size:12.5px;color:var(--eg-muted);margin-top:3px;}
+  .panel-body{padding:20px;}
+
+  .btn{
+    padding:10px 16px;
+    border-radius:var(--radius-sm);
+    border:none;
+    font-size:13.5px;font-weight:700;
+    cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:background .15s ease,opacity .15s ease;
+  }
+  .btn-primary{background:var(--eg-green);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:var(--eg-green-light);}
+  .btn-ghost{background:transparent;color:var(--eg-green);border:1.5px solid var(--eg-border);}
+  .btn-ghost:hover{border-color:var(--eg-green);}
+  .btn-danger-ghost{background:transparent;color:var(--eg-error);border:1.5px solid var(--eg-border);}
+  .btn-danger-ghost:hover{border-color:var(--eg-error);}
+  .btn-danger{background:var(--eg-error);color:#fff;}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+  .btn:disabled{opacity:0.55;cursor:not-allowed;}
+  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;animation:spin .7s linear infinite;display:none;flex-shrink:0;}
+  .btn.loading .spinner{display:inline-block;}
+  .btn-ghost.loading .spinner, .btn-danger-ghost.loading .spinner{border:2px solid rgba(20,67,42,0.25);border-top-color:var(--eg-green);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:46px 20px;
+    color:var(--eg-muted);
+  }
+  .empty-state .ic{
+    width:46px;height:46px;border-radius:50%;
+    background:#F1EDE2;
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:14px;color:#A79F8C;
+  }
+  .empty-state p{font-size:14.5px;font-weight:600;color:var(--eg-text);margin:0 0 4px;}
+  .empty-state span{font-size:13px;color:var(--eg-muted);}
+  .empty-state .btn{margin-top:16px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-size:11.5px;font-weight:700;color:var(--eg-muted);
+    padding:0 14px 10px;
+    border-bottom:1px solid var(--eg-border);
+    white-space:nowrap;
+  }
+  tbody td{padding:13px 14px;border-bottom:1px solid #F1EDE2;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.clickable{cursor:pointer;}
+  tbody tr.clickable:hover{background:#FBF8F2;}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 10px;border-radius:999px;
+    font-size:11.5px;font-weight:700;
+  }
+  .badge-success{background:var(--eg-success-bg);color:var(--eg-success);}
+  .badge-muted{background:#F1EDE2;color:var(--eg-muted);}
+  .badge-error{background:var(--eg-error-bg);color:var(--eg-error);}
+  .badge-warn{background:var(--eg-warn-bg);color:var(--eg-warn);}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--eg-border);}
+  .filters input, .filters select{
+    padding:9px 12px;border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);
+    font-size:13px;font-family:'Inter',sans-serif;background:var(--eg-surface);color:var(--eg-text);
+  }
+  .filters input{flex:1;min-width:180px;}
+  .filters select{min-width:140px;}
+
+  .tabs{display:flex;gap:6px;padding:6px;background:#F1EDE2;border-radius:999px;width:fit-content;}
+  .tabs button{
+    border:none;background:transparent;padding:9px 16px;border-radius:999px;
+    font-size:13px;font-weight:700;color:var(--eg-muted);cursor:pointer;
+  }
+  .tabs button.active{background:var(--eg-green);color:#fff;}
+
+  /* ---- forms ---- */
+  .field{margin-bottom:16px;}
+  .field label:not(.switch){display:block;font-size:13px;font-weight:700;margin-bottom:6px;}
+  .field .hint{font-weight:400;color:var(--eg-muted);font-size:12px;margin-left:4px;}
+  .field input[type=text], .field input[type=number], .field input[type=tel], .field textarea, .field select{
+    width:100%;padding:11px 13px;border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);
+    font-size:14px;font-family:'Inter',sans-serif;color:var(--eg-text);outline:none;background:var(--eg-surface);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--eg-green);box-shadow:0 0 0 3px rgba(20,67,42,0.1);}
+  .field input:disabled{background:#F5F2E9;color:#A79F8C;}
+  .field textarea{resize:vertical;min-height:64px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field.invalid input, .field.invalid select{border-color:var(--eg-error);}
+  .field-err{display:none;color:var(--eg-error);font-size:12px;margin-top:5px;}
+  .field.invalid .field-err{display:block;}
+
+  .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+  .switch input{display:none;}
+  .switch .track{width:40px;height:22px;border-radius:999px;background:#DAD3C0;position:relative;transition:background .15s;flex-shrink:0;}
+  .switch .track::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;}
+  .switch input:checked + .track{background:var(--eg-green);}
+  .switch input:checked + .track::after{transform:translateX(18px);}
+  .switch .label{font-size:13.5px;font-weight:600;}
+
+  /* ---- modal ---- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,20,16,0.45);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;z-index:100;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--eg-surface);
+    border-radius:16px;
+    width:100%;max-width:520px;
+    max-height:88vh;display:flex;flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal.wide{max-width:640px;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--eg-border);}
+  .modal-head h3{font-size:18px;}
+  .modal-close{background:none;border:none;font-size:20px;color:var(--eg-muted);cursor:pointer;line-height:1;padding:4px;}
+  .modal-body{padding:22px;overflow-y:auto;}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--eg-border);}
+
+  .modal-banner{display:none;align-items:flex-start;gap:9px;padding:11px 13px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:16px;}
+  .modal-banner.show{display:flex;}
+  .modal-banner.error{background:var(--eg-error-bg);color:var(--eg-error);}
+  .modal-banner .dot{width:6px;height:6px;border-radius:50%;background:currentColor;margin-top:6px;flex-shrink:0;}
+
+  .detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1EDE2;font-size:13.5px;}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row .k{color:var(--eg-muted);}
+  .detail-row .v{font-weight:700;text-align:right;}
+
+  /* ---- menu items ---- */
+  .menu-section{margin-bottom:26px;}
+  .menu-section:last-child{margin-bottom:0;}
+  .menu-section-title{font-size:13px;font-weight:800;color:var(--eg-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px;}
+  .type-picker{display:flex;gap:8px;flex-wrap:wrap;}
+  .type-opt{flex:1;min-width:110px;padding:12px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--eg-border);background:#fff;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--eg-text);}
+  .type-opt.selected{border-color:var(--eg-green);background:#F1F5EF;color:var(--eg-green);}
+  .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+  .menu-card{border:1px solid var(--eg-border);border-radius:var(--radius);padding:16px;}
+  .menu-card .mh{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .menu-card h4{font-family:'Fraunces',serif;font-size:16.5px;font-weight:500;}
+  .menu-card .price{font-weight:700;color:var(--eg-green);font-size:14px;margin-top:4px;}
+  .menu-card .desc{font-size:12.5px;color:var(--eg-muted);margin-top:8px;line-height:1.5;}
+  .menu-card .groups{margin-top:10px;font-size:12px;color:var(--eg-muted);}
+  .menu-card .actions{display:flex;gap:8px;margin-top:14px;}
+
+  /* ---- Admin menu (Foods / Soups & Stews / Proteins) ---- */
+  .sec-title{font-family:'Inter',sans-serif;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--eg-muted);margin:0 0 12px;}
+  .menu-block-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--eg-green);padding:14px 20px;background:#F6F3EA;border-top:1px solid var(--eg-border);border-bottom:1px solid var(--eg-border);margin:0;}
+  .mrow{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid #F1EDE2;flex-wrap:wrap;}
+  .mrow:last-child{border-bottom:none;}
+  .mrow.is-finished{background:#FFFBF0;}
+  .mname{font-family:'Fraunces',serif;font-size:18px;font-weight:500;}
+  .mprice{font-weight:700;color:var(--eg-green);font-size:14.5px;margin-top:3px;}
+  .mnote{font-size:12px;color:var(--eg-muted);margin-top:3px;}
+  .mctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .avail-btn{border:1.5px solid transparent;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;min-width:150px;}
+  .avail-btn.on{background:var(--eg-success-bg);color:var(--eg-success);border-color:#BFDDC9;}
+  .avail-btn.off{background:#F1EDE2;color:var(--eg-muted);border-color:var(--eg-border);}
+  .avail-btn:disabled{opacity:.6;cursor:wait;}
+  .pill-finished{display:inline-flex;padding:6px 12px;border-radius:999px;background:var(--eg-warn-bg);color:var(--eg-warn);font-size:12.5px;font-weight:800;}
+  .menu-empty-row{padding:16px 20px;font-size:13.5px;color:var(--eg-muted);}
+  .btn-lg{padding:14px 22px;font-size:15px;}
+  .type-big{display:grid;grid-template-columns:1fr;gap:10px;}
+  .type-big button{padding:18px;border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);background:#fff;font-size:16px;font-weight:700;cursor:pointer;text-align:left;color:var(--eg-text);}
+  .type-big button:hover{border-color:var(--eg-green);background:#F1F5EF;color:var(--eg-green);}
+  .type-big button small{display:block;font-weight:500;color:var(--eg-muted);font-size:12.5px;margin-top:3px;}
+  .dm-group{margin-bottom:18px;}
+  .dm-group:last-child{margin-bottom:0;}
+  .dm-title{font-size:12px;font-weight:800;color:var(--eg-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .dm-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1EDE2;font-size:14px;font-weight:600;flex-wrap:wrap;}
+  .dm-item:last-child{border-bottom:none;}
+  .dm-none{font-size:13px;color:var(--eg-muted);}
+  .act-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F1EDE2;font-size:14.5px;}
+  .act-row:last-child{border-bottom:none;}
+  .act-row b{font-weight:700;}
+  .today-note{font-size:13.5px;color:var(--eg-muted);margin:-8px 0 20px;}
+
+  /* ---- toast ---- */
+  .toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:200;}
+  .toast{
+    background:#1C1B17;color:#fff;padding:13px 16px;border-radius:10px;
+    font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    display:flex;align-items:center;gap:10px;max-width:340px;
+    animation:toastIn .2s ease;
+  }
+  .toast.error{background:var(--eg-error);}
+  .toast.success{background:var(--eg-success);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  .menu-toggle{
+    display:none;
+    align-items:center;justify-content:center;
+    width:38px;height:38px;flex-shrink:0;
+    border:1px solid var(--eg-border);border-radius:var(--radius-sm);
+    background:var(--eg-surface);
+    cursor:pointer;margin-right:12px;
+  }
+  .menu-toggle span,
+  .menu-toggle span::before,
+  .menu-toggle span::after{
+    content:"";display:block;
+    width:18px;height:2px;background:var(--eg-text);
+    position:relative;
+  }
+  .menu-toggle span::before{position:absolute;top:-6px;}
+  .menu-toggle span::after{position:absolute;top:6px;}
+
+  .sidebar-backdrop{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.4);
+    z-index:40;
+  }
+  .sidebar-backdrop.open{display:block;}
+
+  @media (max-width:960px){
+    .sidebar{transform:translateX(-100%);transition:transform .2s ease;z-index:50;}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;}
+    .field-row{grid-template-columns:1fr;}
+    .menu-toggle{display:flex;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ================= Sidebar ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="glyph"><span>E</span></div>
+      <div class="wordmark">Eastern Gate</div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Sections">
+      <button class="nav-item active" data-view="dashboard">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-view="sales">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l2.4 12.4A2 2 0 0 0 9.36 17H18a2 2 0 0 0 2-1.6L21.6 7H6"/><circle cx="9.5" cy="20.5" r="1"/><circle cx="17.5" cy="20.5" r="1"/></svg>
+        Sales
+      </button>
+      <button class="nav-item" data-view="sellers">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Sellers
+      </button>
+      <button class="nav-item" data-view="menu">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5a2 2 0 0 1 2-2h8.5L20 7.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 12h8M8 16h8M8 8h4"/></svg>
+        Menu
+      </button>
+      <button class="nav-item" data-view="reports">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+        Reports
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button id="logoutBtn">Log out</button>
+    </div>
+  </aside>
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- ================= Main ================= -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;">
+        <button class="menu-toggle" id="menuToggle" aria-label="Open menu"><span></span></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="conn-pill offline" id="connPill"><span class="dot"></span><span id="connText">Backend not connected</span></div>
+        <div class="admin-chip">
+          <div class="av" id="adminInitial">A</div>
+          <div>
+            <div class="name" id="adminNameLabel">Admin</div>
+            <div class="role">Owner</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+        <h2 class="sec-title">Today's Overview</h2>
+        <div class="grid-stats">
+          <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="statSales">—</div></div>
+          <div class="stat-card"><div class="label">Transactions</div><div class="value" id="statOrders">—</div></div>
+          <div class="stat-card"><div class="label">Cash Sales</div><div class="value" id="statCash">—</div></div>
+          <div class="stat-card"><div class="label">Mobile Money</div><div class="value" id="statMomo">—</div></div>
+        </div>
+        <div class="today-note" id="noSalesNote" style="display:none;">No sales yet today.</div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2 style="font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">Today's Menu Status</h2>
+            <button class="btn btn-primary btn-sm" id="goToMenuBtn">Manage Menu</button>
+          </div>
+          <div class="panel-body" id="menuStatusBody">
+            <div class="dm-none">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2 style="font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">Seller Activity</h2></div>
+          <div class="panel-body" id="salesBySellerBody">
+            <div class="dm-none">No seller activity yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SALES ============ -->
+      
+      <section class="view" id="view-sales">
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2>Transactions</h2><div class="sub">Search and filter every recorded sale.</div></div>
+          </div>
+          <div class="filters">
+            <input type="text" id="txSearch" placeholder="Search by transaction ID or item…">
+            <select id="txDateFilter">
+              <option value="">Any date</option>
+              <option value="today">Today</option>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+            </select>
+            <select id="txSellerFilter"><option value="">All sellers</option></select>
+            <select id="txPaymentFilter">
+              <option value="">All payment methods</option>
+              <option value="cash">Cash</option>
+              <option value="momo">Mobile Money</option>
+            </select>
+            <select id="txStatusFilter">
+              <option value="">All statuses</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div id="txTableWrap">
+            <div class="empty-state">
+              <div class="ic">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l2.4 12.4A2 2 0 0 0 9.36 17H18a2 2 0 0 0 2-1.6L21.6 7H6"/></svg>
+              </div>
+              <p>No transactions found</p>
+              <span>Once sellers start making sales, they'll be listed here.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SELLERS ============ -->
+      <section class="view" id="view-sellers">
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2>Sellers</h2><div class="sub">Everyone who can take orders at Eastern Gate.</div></div>
+            <button class="btn btn-primary" id="addSellerBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              Add seller
+            </button>
+          </div>
+          <div id="sellersTableWrap">
+            <div class="empty-state">
+              <div class="ic">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <p>No sellers yet</p>
+              <span>Add your first seller so they can start taking orders.</span>
+              <button class="btn btn-primary btn-sm" id="addSellerBtnEmpty">+ Add seller</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MENU ============ -->
+      <section class="view" id="view-menu">
+        <h2 class="sec-title" style="font-size:15px;">Menu</h2>
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2 style="font-size:16px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">Today's Menu</h2><div class="sub">Manage what is available today.</div></div>
+          </div>
+          <div id="menuBody"><div class="menu-empty-row">Loading…</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2 style="font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">+ Add New Menu Item</h2></div>
+          <div class="panel-body">
+            <button class="btn btn-primary btn-lg" id="addMenuItemBtn">+ Add New Menu Item</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      
+      <section class="view" id="view-reports">
+        <div class="panel">
+          <div class="panel-head">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <label style="font-size:13px;font-weight:700;">End-of-day report for</label>
+              <input type="date" id="reportDate" style="padding:8px 10px;border:1.5px solid var(--eg-border);border-radius:8px;font-size:13px;">
+            </div>
+            <button class="btn btn-ghost" id="exportBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              Export to Excel
+            </button>
+          </div>
+          <div class="panel-body">
+            <div class="grid-stats" style="margin-bottom:18px;">
+              <div class="stat-card"><div class="label">Total revenue</div><div class="value muted" id="repSales">No data available</div></div>
+              <div class="stat-card"><div class="label">Completed orders</div><div class="value muted" id="repOrders">—</div></div>
+              <div class="stat-card"><div class="label">Cancelled orders</div><div class="value muted" id="repCancelled">—</div></div>
+              <div class="stat-card"><div class="label">Most purchased item</div><div class="value muted" id="repTopItem">—</div></div>
+            </div>
+            <div class="field-row" style="margin-bottom:8px;">
+              <div class="panel" style="margin-bottom:0;">
+                <div class="panel-head"><h2 style="font-size:14.5px;">Sales by seller</h2></div>
+                <div class="panel-body" id="repBySeller">
+                  <div class="empty-state" style="padding:28px 10px;"><p>No seller sales available yet</p></div>
+                </div>
+              </div>
+              <div class="panel" style="margin-bottom:0;">
+                <div class="panel-head"><h2 style="font-size:14.5px;">Payment method breakdown</h2></div>
+                <div class="panel-body" id="repByPayment">
+                  <div class="empty-state" style="padding:28px 10px;"><p>No payment data available yet</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= MODAL: Transaction detail ================= -->
+<div class="overlay" id="modalTx">
+  <div class="modal">
+    <div class="modal-head"><h3>Transaction details</h3><button class="modal-close" data-close="modalTx">&times;</button></div>
+    <div class="modal-body">
+      <div class="modal-banner error" id="txModalBanner"><div class="dot"></div><div id="txModalBannerText"></div></div>
+      <div id="modalTxBody"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between;">
+      <button class="btn btn-danger-ghost" id="cancelTxBtn"><span class="spinner"></span><span class="btn-label">Cancel transaction</span></button>
+      <button class="btn btn-ghost" data-close="modalTx">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: Add/Edit seller ================= -->
+<div class="overlay" id="modalSeller">
+  <div class="modal">
+    <div class="modal-head"><h3 id="sellerModalTitle">Add seller</h3><button class="modal-close" data-close="modalSeller">&times;</button></div>
+    <div class="modal-body">
+      <div class="modal-banner error" id="sellerFormBanner"><div class="dot"></div><div id="sellerFormBannerText"></div></div>
+      <form id="sellerForm">
+        <div class="field" id="f-s-name">
+          <label for="sName">Full name</label>
+          <input type="text" id="sName" placeholder="e.g. Kwame Owusu">
+          <div class="field-err">Enter the seller's full name.</div>
+        </div>
+        <div class="field-row">
+          <div class="field" id="f-s-phone">
+            <label for="sPhone">Phone number</label>
+            <input type="tel" id="sPhone" placeholder="e.g. 024 123 4567">
+            <div class="field-err">Enter a phone number.</div>
+          </div>
+          <div class="field">
+            <label for="sId">Seller ID</label>
+            <input type="text" id="sId" placeholder="Auto-generated on save" disabled>
+          </div>
+        </div>
+        <div class="field" id="f-s-pin">
+          <label for="sPin">PIN<span class="hint">4 digits — seller will use this to log in</span></label>
+          <input type="text" id="sPin" maxlength="4" placeholder="e.g. 4821">
+          <div class="field-err">Enter a 4-digit PIN.</div>
+        </div>
+        <div class="field">
+          <label class="switch"><input type="checkbox" id="sActive" checked><span class="track"></span><span class="label">Active — can log in and sell</span></label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="modalSeller">Cancel</button>
+      <button class="btn btn-primary" id="sellerSaveBtn"><span class="spinner"></span><span class="btn-label">Save seller</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: Reset PIN ================= -->
+<div class="overlay" id="modalResetPin">
+  <div class="modal">
+    <div class="modal-head"><h3>Reset PIN</h3><button class="modal-close" data-close="modalResetPin">&times;</button></div>
+    <div class="modal-body">
+      <div class="modal-banner error" id="resetPinBanner"><div class="dot"></div><div id="resetPinBannerText"></div></div>
+      <p style="font-size:13.5px;color:var(--eg-muted);margin:0 0 16px;">Set a new 4-digit PIN for <b id="resetPinSellerName" style="color:var(--eg-text)"></b>. They'll need to use it the next time they log in.</p>
+      <div class="field" id="f-newpin">
+        <label for="newPin">New PIN</label>
+        <input type="text" id="newPin" maxlength="4" placeholder="e.g. 7734">
+        <div class="field-err">Enter a 4-digit PIN.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="modalResetPin">Cancel</button>
+      <button class="btn btn-primary" id="resetPinSaveBtn"><span class="spinner"></span><span class="btn-label">Reset PIN</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: Generic confirm ================= -->
+<div class="overlay" id="modalConfirm">
+  <div class="modal">
+    <div class="modal-head"><h3 id="confirmTitle">Are you sure?</h3><button class="modal-close" data-close="modalConfirm">&times;</button></div>
+    <div class="modal-body">
+      <div class="modal-banner error" id="confirmBanner"><div class="dot"></div><div id="confirmBannerText"></div></div>
+      <p id="confirmMessage" style="font-size:13.5px;color:var(--eg-muted);margin:0;"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="modalConfirm">Cancel</button>
+      <button class="btn btn-danger" id="confirmActionBtn"><span class="spinner"></span><span class="btn-label">Confirm</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: Add/Edit menu item ================= -->
+<div class="overlay" id="modalMenuItem">
+  <div class="modal">
+    <div class="modal-head"><h3 id="menuModalTitle">Add New Menu Item</h3><button class="modal-close" data-close="modalMenuItem">&times;</button></div>
+    <div class="modal-body">
+      <div class="modal-banner error" id="menuFormBanner"><div class="dot"></div><div id="menuFormBannerText"></div></div>
+
+      <div id="menuStepType">
+        <p style="margin:0 0 14px;font-size:14px;color:var(--eg-muted);">What are you adding?</p>
+        <div class="type-big">
+          <button type="button" data-type="food">Food<small>Has its own price</small></button>
+          <button type="button" data-type="soup">Soup / Stew<small>No price — chosen with a food</small></button>
+          <button type="button" data-type="protein">Protein<small>Has an additional price</small></button>
+        </div>
+      </div>
+
+      <form id="menuItemForm" style="display:none;" onsubmit="return false;">
+        <div class="field" id="f-m-name">
+          <label for="mName">Name:</label>
+          <input type="text" id="mName" placeholder="">
+          <div class="field-err">Enter the item's name.</div>
+        </div>
+        <div class="field" id="f-m-price">
+          <label for="mPrice" id="mPriceLabel">Price:</label>
+          <input type="number" id="mPrice" min="0" step="0.5" placeholder="">
+          <div class="field-err">Enter a valid price (0 or more).</div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="menuBackBtn" style="display:none;margin-right:auto;">← Back</button>
+      <button class="btn btn-ghost" data-close="modalMenuItem">Cancel</button>
+      <button class="btn btn-primary" id="menuSaveBtn" style="display:none;"><span class="spinner"></span><span class="btn-label">Add Food</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================================================================
+     API SERVICE LAYER — talks to the real Eastern Gate backend
+     (Node.js + Express + server-side data.json). Session is carried
+     via an httpOnly cookie, so fetch needs no manual token handling.
+  ================================================================ */
+  const API_BASE = "/api";
+
+  async function apiCall(method, path, body){
+    let res;
+    try{
+      res = await fetch(API_BASE + path, {
+        method,
+        headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+        body: body !== undefined ? JSON.stringify(body) : undefined
+      });
+    }catch(networkErr){
+      const err = new Error("Can't reach the Eastern Gate server. Backend not connected yet.");
+      err.type = "network";
+      throw err;
+    }
+    let json = null;
+    try{ json = await res.json(); }catch(e){}
+    if(!res.ok || !json || json.success === false){
+      const err = new Error((json && json.message) || "Something went wrong. Please try again.");
+      err.type = "api"; err.status = res.status;
+      throw err;
+    }
+    return json.data;
+  }
+
+  const getSession        = () => apiCall("GET", "/auth/me");
+  const logout            = () => apiCall("POST", "/auth/logout");
+  const getDashboard      = () => apiCall("GET", "/admin/dashboard");
+  const getSales          = (params) => apiCall("GET", "/admin/sales" + (params ? "?" + params : ""));
+  const cancelSale        = (id) => apiCall("POST", "/admin/sales/" + encodeURIComponent(id) + "/cancel");
+  const getSellers        = () => apiCall("GET", "/admin/sellers");
+  const createSeller      = (payload) => apiCall("POST", "/admin/sellers", payload);
+  const updateSeller      = (id, payload) => apiCall("PATCH", "/admin/sellers/" + id, payload);
+  const resetSellerPin    = (id, pin) => apiCall("POST", "/admin/sellers/" + id + "/reset-pin", { pin });
+  const activateSeller    = (id) => apiCall("POST", "/admin/sellers/" + id + "/activate");
+  const deactivateSeller  = (id) => apiCall("POST", "/admin/sellers/" + id + "/deactivate");
+  const getMenu           = () => apiCall("GET", "/menu");
+  const createMenuItem    = (payload) => apiCall("POST", "/admin/menu", payload);
+  const updateMenuItem    = (id, payload) => apiCall("PATCH", "/admin/menu/" + id, payload);
+  const restoreMenuItem   = (id) => apiCall("POST", "/admin/menu/" + id + "/restore");
+  const getEndOfDayReport = (date) => apiCall("GET", "/admin/reports/end-of-day?date=" + encodeURIComponent(date));
+
+  /* ================================================================
+     Session guard — this page is admin-only.
+  ================================================================ */
+  let currentAdmin = null;
+  (async function guard(){
+    try{
+      const session = await getSession();
+      if(!session || session.role !== "admin"){
+        window.location.href = "login.html";
+        return;
+      }
+      currentAdmin = session;
+      document.getElementById("adminNameLabel").textContent = session.fullName || "Admin";
+      document.getElementById("adminInitial").textContent = (session.fullName || "A").trim().charAt(0).toUpperCase();
+      setConn(true);
+      loadViewData("dashboard");
+      loadSellers(); // warms the seller filter dropdown + sellers cache early
+    }catch(err){
+      window.location.href = "login.html";
+    }
+  })();
+
+  /* ================================================================
+     Shell: navigation, connection pill, logout
+  ================================================================ */
+  const views = {
+    dashboard: document.getElementById("view-dashboard"),
+    sales: document.getElementById("view-sales"),
+    sellers: document.getElementById("view-sellers"),
+    menu: document.getElementById("view-menu"),
+    reports: document.getElementById("view-reports")
+  };
+  const titles = { dashboard:"Dashboard", sales:"Sales", sellers:"Sellers", menu:"Menu", reports:"Reports & end of day" };
+
+  function goToView(key){
+    document.querySelectorAll(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.view === key));
+    Object.values(views).forEach(v => v.classList.remove("active"));
+    views[key].classList.add("active");
+    document.getElementById("pageTitle").textContent = titles[key];
+    loadViewData(key);
+    closeSidebar();
+  }
+
+  document.getElementById("nav").addEventListener("click", (e) => {
+    const btn = e.target.closest(".nav-item");
+    if(!btn) return;
+    goToView(btn.dataset.view);
+  });
+  document.getElementById("goToMenuBtn").addEventListener("click", () => goToView("menu"));
+
+  /* ---- Mobile sidebar open/close ---- */
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+  function openSidebar(){
+    sidebarEl.classList.add("open");
+    sidebarBackdrop.classList.add("open");
+  }
+  function closeSidebar(){
+    sidebarEl.classList.remove("open");
+    sidebarBackdrop.classList.remove("open");
+  }
+  document.getElementById("menuToggle").addEventListener("click", openSidebar);
+  sidebarBackdrop.addEventListener("click", closeSidebar);
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    closeSidebar();
+    try{ await logout(); }catch(e){ /* clear client-side regardless */ }
+    window.location.href = "login.html";
+  });
+
+  function toast(message, type){
+    const el = document.createElement("div");
+    el.className = "toast" + (type ? " " + type : "");
+    el.textContent = message;
+    document.getElementById("toastWrap").appendChild(el);
+    setTimeout(() => el.remove(), 4200);
+  }
+
+  function setConn(online){
+    const pill = document.getElementById("connPill");
+    pill.classList.toggle("offline", !online);
+    document.getElementById("connText").textContent = online ? "Connected" : "Backend not connected";
+  }
+
+  function money(n){ return "GHS " + Number(n || 0).toFixed(2); }
+
+  /* ================================================================
+     Dashboard
+  ================================================================ */
+  async function loadDashboard(){
+    try{
+      const d = await getDashboard();
+      setConn(true);
+      renderDashboard(d);
+    }catch(err){
+      if(err.type === "network") setConn(false);
+      renderDashboard(null);
+    }
+  }
+
+  function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function gh(n){ n = Number(n || 0); return "GHS " + (Number.isInteger(n) ? n : n.toFixed(2)); }
+
+  function renderDashboard(d){
+    const t = d ? d.today : null;
+    const setVal = (id, v) => { document.getElementById(id).textContent = v; };
+    setVal("statSales", t ? money(t.revenue) : "—");
+    setVal("statOrders", t ? t.orders : "—");
+    setVal("statCash", t ? money(t.cash.total) : "—");
+    setVal("statMomo", t ? money(t.momo.total) : "—");
+    document.getElementById("noSalesNote").style.display = (t && t.orders === 0) ? "block" : "none";
+
+    /* ---- Today's menu status: Available / Finished / Not Available ---- */
+    const menuStatusBody = document.getElementById("menuStatusBody");
+    if(!d || !d.menuStatus || d.menuStatus.length === 0){
+      menuStatusBody.innerHTML = `<div class="dm-none">No menu items yet.</div>`;
+    }else{
+            const available = d.menuStatus.filter(it => it.status === "available");
+      const finished = d.menuStatus.filter(it => it.status === "finished");
+      const notAvailable = d.menuStatus.filter(it => it.status === "unavailable");
+      const plain = (title, list) => `<div class="dm-group"><div class="dm-title">${title}</div>${
+        list.length ? list.map(it => `<div class="dm-item"><span>${esc(it.name)}</span></div>`).join("") : `<div class="dm-none">None</div>`
+      }</div>`;
+      const finishedGroup = `<div class="dm-group"><div class="dm-title">Finished</div>${
+        finished.length ? finished.map(it => `<div class="dm-item">
+            <span>${esc(it.name)} <span class="pill-finished" style="margin-left:8px;">Finished by Seller</span>${it.finishedBy ? `<span style="font-weight:500;color:var(--eg-muted);font-size:12px;margin-left:8px;">${esc(it.finishedBy)}</span>` : ""}</span>
+            <button class="btn btn-ghost btn-sm" data-restore="${it.id}">Restore</button>
+          </div>`).join("") : `<div class="dm-none">None</div>`
+      }</div>`;
+      menuStatusBody.innerHTML = plain("Available", available) + finishedGroup + plain("Not Available", notAvailable);
+      menuStatusBody.querySelectorAll("[data-restore]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          const item = d.menuStatus.find(i => i.id === btn.dataset.restore);
+          try{
+            await restoreMenuItem(btn.dataset.restore);
+            toast((item ? item.name : "Item") + " is available again.", "success");
+            loadDashboard();
+          }catch(err){ toast(err.message, "error"); btn.disabled = false; }
+        });
+      });
+    }
+
+    /* ---- Seller activity ---- */
+    const sellerBody = document.getElementById("salesBySellerBody");
+    if(!d || !d.salesBySeller || d.salesBySeller.length === 0){
+      sellerBody.innerHTML = `<div class="dm-none">No seller activity yet.</div>`;
+    }else{
+      sellerBody.innerHTML = d.salesBySeller.map(x =>
+        `<div class="act-row"><b>${esc(x.sellerName)}</b><span>${x.orders} ${x.orders === 1 ? "sale" : "sales"} today</span></div>`
+      ).join("");
+    }
+  }
+
+  function formatTime(iso){
+    if(!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
+  }
+
+  /* ================================================================
+     Sales
+  ================================================================ */
+  let salesCache = [];
+
+  function currentSalesQuery(){
+    const params = new URLSearchParams();
+    const search = document.getElementById("txSearch").value.trim();
+    const dateSel = document.getElementById("txDateFilter").value;
+    const seller = document.getElementById("txSellerFilter").value;
+    const payment = document.getElementById("txPaymentFilter").value;
+    const status = document.getElementById("txStatusFilter").value;
+
+    if(search) params.set("search", search);
+    if(dateSel === "today"){
+      params.set("date", "today");
+    }else if(dateSel === "week"){
+      params.set("from", isoDaysAgo(6));
+      params.set("to", isoDaysAgo(0));
+    }else if(dateSel === "month"){
+      params.set("from", isoDaysAgo(29));
+      params.set("to", isoDaysAgo(0));
+    }
+    if(seller) params.set("seller", seller);
+    if(payment) params.set("paymentMethod", payment);
+    if(status) params.set("status", status);
+    return params.toString();
+  }
+  function isoDaysAgo(n){
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0,10);
+  }
+
+  async function loadSales(){
+    try{
+      salesCache = await getSales(currentSalesQuery());
+      renderSalesTable(salesCache);
+    }catch(err){
+      salesCache = [];
+      renderSalesTable([]);
+    }
+  }
+  function renderSalesTable(list){
+    const wrap = document.getElementById("txTableWrap");
+    if(!list || list.length === 0){
+      wrap.innerHTML = `<div class="empty-state">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l2.4 12.4A2 2 0 0 0 9.36 17H18a2 2 0 0 0 2-1.6L21.6 7H6"/></svg></div>
+        <p>No transactions found</p><span>Once sellers start making sales, they'll be listed here.</span>
+      </div>`;
+      return;
+    }
+    const rows = list.map(t => `
+      <tr class="clickable" data-id="${t.transactionId}">
+        <td>${t.transactionId}</td><td>${formatTime(t.createdAt)}</td><td>${t.sellerName}</td>
+        <td>${(t.items||[]).map(i=>`${i.name} ×${i.quantity}`).join(", ")}</td>
+        <td>${money(t.total)}</td><td>${t.paymentMethod === "cash" ? "Cash" : "Mobile Money"}</td>
+        <td><span class="badge ${t.status === 'completed' ? 'badge-success' : 'badge-muted'}">${t.status}</span></td>
+        <td><button class="btn btn-ghost btn-sm">View</button></td>
+      </tr>`).join("");
+    wrap.innerHTML = `<table><thead><tr>
+      <th>Transaction ID</th><th>Date/Time</th><th>Seller</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th></th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+    wrap.querySelectorAll("tr.clickable").forEach(tr => {
+      tr.addEventListener("click", () => openTxModal(tr.dataset.id));
+    });
+  }
+
+  let openTxId = null;
+  function openTxModal(id){
+    const t = salesCache.find(x => x.transactionId === id);
+    if(!t) return;
+    openTxId = id;
+    hideModalBanner("txModalBanner");
+    const itemsHtml = (t.items||[]).map(it => `${it.name} ×${it.quantity} — ${money(it.subtotal)}`).join("<br>");
+    document.getElementById("modalTxBody").innerHTML = `
+      <div class="detail-row"><span class="k">Transaction ID</span><span class="v">${t.transactionId}</span></div>
+      <div class="detail-row"><span class="k">Date/Time</span><span class="v">${formatTime(t.createdAt)}</span></div>
+      <div class="detail-row"><span class="k">Seller</span><span class="v">${t.sellerName}</span></div>
+      <div class="detail-row"><span class="k">Items</span><span class="v" style="text-align:left;max-width:280px;">${itemsHtml}</span></div>
+      <div class="detail-row"><span class="k">Total</span><span class="v">${money(t.total)}</span></div>
+      <div class="detail-row"><span class="k">Payment method</span><span class="v">${t.paymentMethod === "cash" ? "Cash" : "Mobile Money"}</span></div>
+      <div class="detail-row"><span class="k">Status</span><span class="v">${t.status}</span></div>`;
+    const cancelBtn = document.getElementById("cancelTxBtn");
+    cancelBtn.style.display = t.status === "completed" ? "" : "none";
+    openModal("modalTx");
+  }
+  document.getElementById("cancelTxBtn").addEventListener("click", async () => {
+    if(!openTxId) return;
+    hideModalBanner("txModalBanner");
+    const btn = document.getElementById("cancelTxBtn");
+    setBtnLoading(btn, true);
+    try{
+      await cancelSale(openTxId);
+      closeModal("modalTx");
+      toast("Transaction cancelled.", "success");
+      loadSales();
+      if(views.dashboard.classList.contains("active")) loadDashboard();
+    }catch(err){
+      showModalBanner("txModalBanner", "txModalBannerText", err.message);
+    }finally{
+      setBtnLoading(btn, false);
+    }
+  });
+
+  ["txSearch","txDateFilter","txSellerFilter","txPaymentFilter","txStatusFilter"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => loadSales());
+  });
+
+  /* ================================================================
+     Sellers
+  ================================================================ */
+  let sellersCache = [];
+  async function loadSellers(){
+    try{
+      sellersCache = await getSellers();
+      renderSellersTable(sellersCache);
+      populateSellerFilter(sellersCache);
+    }catch(err){
+      sellersCache = [];
+      renderSellersTable([]);
+    }
+  }
+  function populateSellerFilter(list){
+    const sel = document.getElementById("txSellerFilter");
+    const current = sel.value;
+    sel.innerHTML = `<option value="">All sellers</option>` + list.map(s => `<option value="${s.id}">${s.fullName}</option>`).join("");
+    sel.value = current;
+  }
+  function renderSellersTable(list){
+    const wrap = document.getElementById("sellersTableWrap");
+    if(!list || list.length === 0){
+      wrap.innerHTML = `<div class="empty-state">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <p>No sellers yet</p><span>Add your first seller so they can start taking orders.</span>
+        <button class="btn btn-primary btn-sm" id="addSellerBtnEmpty2">+ Add seller</button>
+      </div>`;
+      document.getElementById("addSellerBtnEmpty2").addEventListener("click", () => openSellerModal());
+      return;
+    }
+    const rows = list.map(s => `
+      <tr>
+        <td>${s.fullName}</td><td>${s.id}</td><td>${s.phone || "—"}</td>
+        <td><span class="badge ${s.status === 'active' ? "badge-success" : "badge-muted"}">${s.status === 'active' ? "Active" : "Inactive"}</span></td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" data-act="edit" data-id="${s.id}">Edit</button>
+          <button class="btn btn-ghost btn-sm" data-act="pin" data-id="${s.id}">Reset PIN</button>
+          <button class="btn ${s.status === 'active' ? 'btn-danger-ghost' : 'btn-ghost'} btn-sm" data-act="toggle" data-id="${s.id}">${s.status === 'active' ? "Deactivate" : "Activate"}</button>
+        </td>
+      </tr>`).join("");
+    wrap.innerHTML = `<table><thead><tr>
+      <th>Name</th><th>Seller ID</th><th>Phone</th><th>Status</th><th></th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+    wrap.querySelectorAll("button[data-act]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const seller = sellersCache.find(s => s.id === btn.dataset.id);
+        if(btn.dataset.act === "edit") openSellerModal(seller);
+        if(btn.dataset.act === "pin") openResetPinModal(seller);
+        if(btn.dataset.act === "toggle") openToggleSellerConfirm(seller);
+      });
+    });
+  }
+
+  let editingSellerId = null;
+  function openSellerModal(seller){
+    editingSellerId = seller ? seller.id : null;
+    document.getElementById("sellerModalTitle").textContent = seller ? "Edit seller" : "Add seller";
+    document.getElementById("sName").value = seller ? seller.fullName : "";
+    document.getElementById("sPhone").value = seller ? (seller.phone || "") : "";
+    document.getElementById("sId").value = seller ? seller.id : "";
+    document.getElementById("sId").placeholder = "Assigned automatically on save";
+    document.getElementById("sPin").value = "";
+    document.getElementById("sPin").placeholder = seller ? "Leave blank to keep current PIN" : "e.g. 4821";
+    document.getElementById("sActive").checked = seller ? seller.status === "active" : true;
+    clearFieldError("f-s-name"); clearFieldError("f-s-phone"); clearFieldError("f-s-pin");
+    hideModalBanner("sellerFormBanner");
+    openModal("modalSeller");
+  }
+  document.getElementById("addSellerBtn").addEventListener("click", () => openSellerModal());
+  document.getElementById("addSellerBtnEmpty").addEventListener("click", () => openSellerModal());
+
+  document.getElementById("sellerSaveBtn").addEventListener("click", async () => {
+    hideModalBanner("sellerFormBanner");
+    const name = document.getElementById("sName").value.trim();
+    const phone = document.getElementById("sPhone").value.trim();
+    const pin = document.getElementById("sPin").value.trim();
+
+    let valid = true;
+    toggleFieldError("f-s-name", !name); if(!name) valid = false;
+    toggleFieldError("f-s-phone", !phone); if(!phone) valid = false;
+    const pinInvalid = !editingSellerId ? !/^\d{4}$/.test(pin) : (pin && !/^\d{4}$/.test(pin));
+    toggleFieldError("f-s-pin", pinInvalid); if(pinInvalid) valid = false;
+    if(!valid) return;
+
+    const btn = document.getElementById("sellerSaveBtn");
+    setBtnLoading(btn, true);
+    try{
+      const status = document.getElementById("sActive").checked ? "active" : "inactive";
+      if(editingSellerId){
+        await updateSeller(editingSellerId, { fullName: name, phone, pin: pin || undefined, status });
+      }else{
+        await createSeller({ fullName: name, phone, pin, status });
+      }
+      closeModal("modalSeller");
+      toast("Seller saved.", "success");
+      loadSellers();
+    }catch(err){
+      showModalBanner("sellerFormBanner", "sellerFormBannerText", err.message);
+    }finally{
+      setBtnLoading(btn, false);
+    }
+  });
+
+  let resetPinSellerId = null;
+  function openResetPinModal(seller){
+    resetPinSellerId = seller.id;
+    document.getElementById("resetPinSellerName").textContent = seller.fullName;
+    document.getElementById("newPin").value = "";
+    clearFieldError("f-newpin");
+    hideModalBanner("resetPinBanner");
+    openModal("modalResetPin");
+  }
+  document.getElementById("resetPinSaveBtn").addEventListener("click", async () => {
+    hideModalBanner("resetPinBanner");
+    const pin = document.getElementById("newPin").value.trim();
+    const invalid = !/^\d{4}$/.test(pin);
+    toggleFieldError("f-newpin", invalid);
+    if(invalid) return;
+    const btn = document.getElementById("resetPinSaveBtn");
+    setBtnLoading(btn, true);
+    try{
+      await resetSellerPin(resetPinSellerId, pin);
+      closeModal("modalResetPin");
+      toast("PIN reset.", "success");
+    }catch(err){
+      showModalBanner("resetPinBanner", "resetPinBannerText", err.message);
+    }finally{
+      setBtnLoading(btn, false);
+    }
+  });
+
+  let toggleSellerTarget = null;
+  function openToggleSellerConfirm(seller){
+    toggleSellerTarget = seller;
+    const willDeactivate = seller.status === "active";
+    document.getElementById("confirmTitle").textContent = willDeactivate ? "Deactivate seller?" : "Activate seller?";
+    document.getElementById("confirmMessage").textContent = willDeactivate
+      ? `${seller.fullName} will no longer be able to log in or make sales.`
+      : `${seller.fullName} will be able to log in and make sales again.`;
+    document.getElementById("confirmActionBtn").className = "btn " + (willDeactivate ? "btn-danger" : "btn-primary");
+    hideModalBanner("confirmBanner");
+    openModal("modalConfirm");
+    document.getElementById("confirmActionBtn").onclick = async () => {
+      hideModalBanner("confirmBanner");
+      const btn = document.getElementById("confirmActionBtn");
+      setBtnLoading(btn, true);
+      try{
+        if(willDeactivate) await deactivateSeller(seller.id);
+        else await activateSeller(seller.id);
+        closeModal("modalConfirm");
+        toast("Seller updated.", "success");
+        loadSellers();
+      }catch(err){
+        showModalBanner("confirmBanner", "confirmBannerText", err.message);
+      }finally{
+        setBtnLoading(btn, false);
+      }
+    };
+  }
+
+  /* ================================================================
+     Menu — one flat, permanent Master Menu. No categories: the Admin
+     types a name only when adding a genuinely new item; every other day
+     they just flip each item's ON/OFF switch.
+  ================================================================ */
+  let menuCache = [];
+
+  async function loadMenu(){
+    try{
+      menuCache = await getMenu();
+      renderMenu(menuCache);
+    }catch(err){
+      if(err.type === "network") setConn(false);
+      menuCache = [];
+      renderMenu([]);
+    }
+  }
+
+  const MENU_SECTIONS = [
+    { type: "food", title: "Foods", empty: "No foods yet." },
+    { type: "soup", title: "Soups & Stews", empty: "No soups or stews yet." },
+    { type: "protein", title: "Proteins", empty: "No proteins yet." }
+  ];
+
+  function menuRowHtml(it){
+    // Soups/stews never show a price. Foods show their price, proteins "+ price".
+    let priceHtml = "";
+    if(it.type === "food") priceHtml = `<div class="mprice">${gh(it.price)}</div>`;
+    if(it.type === "protein") priceHtml = `<div class="mprice">+ ${gh(it.price)}</div>`;
+    const finished = it.status === "finished";
+    return `<div class="mrow ${finished ? "is-finished" : ""}">
+      <div class="minfo">
+        <div class="mname">${esc(it.name)}</div>
+        ${priceHtml}
+        ${finished && it.finishedBy ? `<div class="mnote">Marked finished by ${esc(it.finishedBy)}</div>` : ""}
+      </div>
+      <div class="mctl">
+        ${finished ? `<span class="pill-finished">Finished by Seller</span>` : ""}
+        <button class="avail-btn ${it.available ? "on" : "off"}" data-act="toggle" data-id="${it.id}" title="Tap to turn ${it.available ? "OFF" : "ON"} for today">${it.available ? "Available Today" : "Not Available"}</button>
+        ${finished ? `<button class="btn btn-primary btn-sm" data-act="restore" data-id="${it.id}">Restore</button>` : ""}
+        <button class="btn btn-ghost btn-sm" data-act="edit" data-id="${it.id}">Edit</button>
+      </div>
+    </div>`;
+  }
+
+  function renderMenu(items){
+    const body = document.getElementById("menuBody");
+    body.innerHTML = MENU_SECTIONS.map(sec => {
+      const group = (items || []).filter(it => it.type === sec.type); // Master Menu order
+      return `<h3 class="menu-block-title">${sec.title}</h3>` +
+        (group.length ? group.map(menuRowHtml).join("") : `<div class="menu-empty-row">${sec.empty}</div>`);
+    }).join("");
+  }
+
+  document.getElementById("menuBody").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if(!btn) return;
+    const item = menuCache.find(i => i.id === btn.dataset.id);
+    if(!item) return;
+    if(btn.dataset.act === "edit") return openEditMenuModal(item);
+    if(btn.dataset.act === "restore") return restoreItem(item);
+    if(btn.dataset.act === "toggle"){
+      btn.disabled = true;
+      try{
+        await updateMenuItem(item.id, { available: !item.available });
+        await loadMenu();
+      }catch(err){
+        toast(err.message, "error");
+        btn.disabled = false;
+      }
+    }
+  });
+
+  async function restoreItem(item){
+    try{
+      await restoreMenuItem(item.id);
+      toast(item.name + " is available again.", "success");
+      loadMenu();
+    }catch(err){
+      toast(err.message, "error");
+    }
+  }
+
+  /* ---- Add New Menu Item: choose type, then the matching form ---- */
+  const TYPE_LABEL = { food: "Food", soup: "Soup / Stew", protein: "Protein" };
+  let editingMenuItemId = null;
+  let selectedMenuType = null;
+
+  function showMenuStep(step){
+    document.getElementById("menuStepType").style.display = step === "type" ? "" : "none";
+    document.getElementById("menuItemForm").style.display = step === "form" ? "" : "none";
+    document.getElementById("menuSaveBtn").style.display = step === "form" ? "" : "none";
+    document.getElementById("menuBackBtn").style.display = (step === "form" && !editingMenuItemId) ? "" : "none";
+  }
+
+  function configureMenuForm(type){
+    selectedMenuType = type;
+    const isSoup = type === "soup";
+    document.getElementById("f-m-price").style.display = isSoup ? "none" : ""; // soups/stews: NO price field
+    document.getElementById("mPriceLabel").textContent = type === "protein" ? "Additional Price:" : "Price:";
+    document.getElementById("mName").value = "";
+    document.getElementById("mPrice").value = "";
+    clearFieldError("f-m-name"); clearFieldError("f-m-price");
+    hideModalBanner("menuFormBanner");
+    document.querySelector("#menuSaveBtn .btn-label").textContent = "Add " + TYPE_LABEL[type];
+  }
+
+  function openMenuModal(){
+    editingMenuItemId = null;
+    selectedMenuType = null;
+    document.getElementById("menuModalTitle").textContent = "Add New Menu Item";
+    hideModalBanner("menuFormBanner");
+    showMenuStep("type");
+    openModal("modalMenuItem");
+  }
+
+  function openEditMenuModal(item){
+    editingMenuItemId = item.id;
+    configureMenuForm(item.type);
+    document.getElementById("menuModalTitle").textContent = "Edit " + TYPE_LABEL[item.type];
+    document.getElementById("mName").value = item.name;
+    document.getElementById("mPrice").value = item.type === "soup" ? "" : item.price;
+    document.querySelector("#menuSaveBtn .btn-label").textContent = "Save Changes";
+    showMenuStep("form");
+    openModal("modalMenuItem");
+  }
+
+  document.getElementById("menuStepType").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-type]");
+    if(!btn) return;
+    configureMenuForm(btn.dataset.type);
+    document.getElementById("menuModalTitle").textContent = "Add " + TYPE_LABEL[btn.dataset.type];
+    showMenuStep("form");
+    document.getElementById("mName").focus();
+  });
+  document.getElementById("menuBackBtn").addEventListener("click", openMenuModal);
+  document.getElementById("addMenuItemBtn").addEventListener("click", openMenuModal);
+
+  document.getElementById("menuSaveBtn").addEventListener("click", async () => {
+    hideModalBanner("menuFormBanner");
+    const name = document.getElementById("mName").value.trim();
+    const priceRaw = document.getElementById("mPrice").value;
+    let valid = true;
+    toggleFieldError("f-m-name", !name); if(!name) valid = false;
+    if(selectedMenuType !== "soup"){
+      const priceInvalid = priceRaw === "" || isNaN(priceRaw) || Number(priceRaw) < 0;
+      toggleFieldError("f-m-price", priceInvalid); if(priceInvalid) valid = false;
+    }
+    if(!valid) return;
+
+    const btn = document.getElementById("menuSaveBtn");
+    setBtnLoading(btn, true);
+    try{
+      if(editingMenuItemId){
+        const payload = { name };
+        if(selectedMenuType !== "soup") payload.price = priceRaw;
+        await updateMenuItem(editingMenuItemId, payload);
+      }else{
+        const payload = { type: selectedMenuType, name };
+        if(selectedMenuType !== "soup") payload.price = priceRaw;
+        await createMenuItem(payload);
+      }
+      closeModal("modalMenuItem");
+      toast(editingMenuItemId ? "Menu item updated." : name + " added to the Master Menu.", "success");
+      loadMenu();
+    }catch(err){
+      showModalBanner("menuFormBanner", "menuFormBannerText", err.message);
+    }finally{
+      setBtnLoading(btn, false);
+    }
+  });
+
+  /* ================================================================
+     Reports
+  ================================================================ */
+  const reportDateInput = document.getElementById("reportDate");
+  reportDateInput.value = new Date().toISOString().slice(0,10);
+  reportDateInput.addEventListener("change", loadReports);
+
+  async function loadReports(){
+    try{
+      const d = await getEndOfDayReport(reportDateInput.value);
+      renderReports(d);
+    }catch(err){
+      renderReports(null);
+    }
+  }
+  function renderReports(d){
+    document.getElementById("repSales").textContent = d ? money(d.totalRevenue) : "No data available";
+    document.getElementById("repOrders").textContent = d ? d.completedOrders : "—";
+    document.getElementById("repCancelled").textContent = d ? d.cancelledOrders : "—";
+    document.getElementById("repTopItem").textContent = d && d.mostPurchasedItem ? `${d.mostPurchasedItem.name} (${d.mostPurchasedItem.quantity} sold)` : "—";
+
+    const bySeller = document.getElementById("repBySeller");
+    bySeller.innerHTML = (d && d.salesBySeller && d.salesBySeller.length)
+      ? `<table><thead><tr><th>Seller</th><th>Orders</th><th>Revenue</th></tr></thead><tbody>${d.salesBySeller.map(s=>`<tr><td>${s.sellerName}</td><td>${s.orders}</td><td>${money(s.revenue)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty-state" style="padding:28px 10px;"><p>No seller sales available yet</p></div>`;
+
+    const byPayment = document.getElementById("repByPayment");
+    byPayment.innerHTML = d
+      ? `<table><thead><tr><th>Method</th><th>Orders</th><th>Total</th></tr></thead><tbody>
+          <tr><td>Cash</td><td>${d.cash.count}</td><td>${money(d.cash.total)}</td></tr>
+          <tr><td>Mobile Money</td><td>${d.momo.count}</td><td>${money(d.momo.total)}</td></tr>
+        </tbody></table>`
+      : `<div class="empty-state" style="padding:28px 10px;"><p>No payment data available yet</p></div>`;
+  }
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const date = reportDateInput.value;
+    toast("Preparing your export…");
+    window.location.href = API_BASE + "/admin/sales/export?date=" + encodeURIComponent(date);
+  });
+
+  /* ================================================================
+     Helpers: modal, field errors, buttons
+  ================================================================ */
+  function openModal(id){ document.getElementById(id).classList.add("show"); }
+  function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+  document.querySelectorAll("[data-close]").forEach(el => {
+    el.addEventListener("click", () => closeModal(el.dataset.close));
+  });
+  document.querySelectorAll(".overlay").forEach(ov => {
+    ov.addEventListener("click", (e) => { if(e.target === ov) ov.classList.remove("show"); });
+  });
+
+  function toggleFieldError(fieldId, isInvalid){ document.getElementById(fieldId).classList.toggle("invalid", isInvalid); }
+  function clearFieldError(fieldId){ document.getElementById(fieldId).classList.remove("invalid"); }
+  function showModalBanner(bannerId, textId, msg){ document.getElementById(bannerId).classList.add("show"); document.getElementById(textId).textContent = msg; }
+  function hideModalBanner(bannerId){ document.getElementById(bannerId).classList.remove("show"); }
+  function setBtnLoading(btn, loading){ btn.classList.toggle("loading", loading); btn.disabled = loading; }
+
+  /* ================================================================
+     View router
+  ================================================================ */
+  function loadViewData(key){
+    if(key === "dashboard") loadDashboard();
+    if(key === "sales") loadSales();
+    if(key === "sellers") loadSellers();
+    if(key === "menu") loadMenu();
+    if(key === "reports") loadReports();
+  }
+
+})();
+
+</script>
+</body>
+</html>

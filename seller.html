@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eastern Gate — Seller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --eg-green:#14432A;
+    --eg-green-dark:#0D2E1C;
+    --eg-green-light:#1F5C3B;
+    --eg-gold:#D9A441;
+    --eg-gold-dark:#B8842E;
+    --eg-rust:#C1502E;
+    --eg-bg:#FBF8F2;
+    --eg-surface:#FFFFFF;
+    --eg-text:#1C1B17;
+    --eg-muted:#6B6558;
+    --eg-border:#E4DFD1;
+    --eg-success:#2F7A4D;
+    --eg-success-bg:#E7F2EA;
+    --eg-error:#C0392B;
+    --eg-error-bg:#FBEAE7;
+    --eg-warn:#8A6416;
+    --eg-warn-bg:#FBF3DF;
+    --radius:14px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--eg-text);
+    background:var(--eg-bg);
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;font-weight:500;}
+  button{font-family:inherit;-webkit-tap-highlight-color:transparent;}
+
+  /* ================= Shell ================= */
+  .app{display:flex;flex-direction:column;min-height:100vh;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 22px;
+    background:linear-gradient(135deg,var(--eg-green-dark),var(--eg-green));
+    color:#fff;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .glyph{width:32px;height:32px;border:2px solid var(--eg-gold);border-radius:9px;display:flex;align-items:center;justify-content:center;transform:rotate(45deg);flex-shrink:0;}
+  .brand .glyph span{transform:rotate(-45deg);color:var(--eg-gold);font-family:'Fraunces',serif;font-weight:600;font-size:15px;}
+  .brand .wordmark{font-family:'Fraunces',serif;font-size:17px;}
+  .topbar-right{display:flex;align-items:center;gap:14px;}
+  .seller-chip{font-size:13px;font-weight:700;color:#E9E3CD;}
+  .seller-chip .id{font-weight:500;color:#B9CEC0;font-size:12px;}
+  .logout-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);color:#fff;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;}
+  .logout-btn:hover{background:rgba(255,255,255,0.18);}
+
+  .tabbar{
+    display:flex;
+    background:var(--eg-surface);
+    border-bottom:1px solid var(--eg-border);
+    padding:0 14px;
+  }
+  .tab-btn{
+    flex:1;max-width:220px;
+    padding:15px 10px;
+    background:none;border:none;
+    font-size:14.5px;font-weight:700;
+    color:var(--eg-muted);
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .tab-btn.active{color:var(--eg-green);border-bottom-color:var(--eg-green);}
+  .tab-btn .ic{width:18px;height:18px;}
+
+  .content{flex:1;padding:22px;max-width:1100px;width:100%;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ================= Reusable ================= */
+  .btn{
+    padding:13px 20px;border-radius:var(--radius-sm);border:none;
+    font-size:15px;font-weight:700;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    transition:background .15s ease,opacity .15s ease,transform .1s ease;
+  }
+  .btn-primary{background:var(--eg-green);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:var(--eg-green-light);}
+  .btn-primary:active:not(:disabled){transform:translateY(1px);}
+  .btn-ghost{background:#F1EDE2;color:var(--eg-text);}
+  .btn-ghost:hover{background:#E7E0CE;}
+  .btn-danger{background:var(--eg-error);color:#fff;}
+  .btn-danger:hover:not(:disabled){opacity:0.9;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;animation:spin .7s linear infinite;display:none;}
+  .btn.loading .spinner{display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .panel{background:var(--eg-surface);border:1px solid var(--eg-border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+  .panel-head{padding:18px 20px;border-bottom:1px solid var(--eg-border);}
+  .panel-head h2{font-size:17px;}
+  .panel-body{padding:20px;}
+
+  .empty-state{display:flex;flex-direction:column;align-items:center;text-align:center;padding:44px 20px;color:var(--eg-muted);}
+  .empty-state .ic{width:44px;height:44px;border-radius:50%;background:#F1EDE2;display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:#A79F8C;}
+  .empty-state p{font-size:14.5px;font-weight:700;color:var(--eg-text);margin:0 0 4px;}
+  .empty-state span{font-size:13px;color:var(--eg-muted);}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;}
+  .badge-success{background:var(--eg-success-bg);color:var(--eg-success);}
+  .badge-muted{background:#F1EDE2;color:var(--eg-muted);}
+
+  /* ---- Dashboard ---- */
+  .grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px;}
+  .stat-card{background:var(--eg-surface);border:1px solid var(--eg-border);border-radius:var(--radius);padding:18px;}
+  .stat-card .label{font-size:12.5px;font-weight:700;color:var(--eg-muted);}
+  .stat-card .value{font-family:'Fraunces',serif;font-size:26px;margin-top:8px;}
+  .stat-card .value.muted{font-size:15px;color:#A79F8C;font-family:'Inter',sans-serif;font-weight:600;}
+
+  .new-sale-cta{
+    display:flex;align-items:center;justify-content:space-between;
+    background:linear-gradient(135deg,var(--eg-green),var(--eg-green-light));
+    border-radius:var(--radius);
+    padding:26px 28px;
+    color:#fff;
+    margin-bottom:18px;
+    flex-wrap:wrap;gap:16px;
+  }
+  .new-sale-cta h2{color:#fff;font-size:22px;}
+  .new-sale-cta p{color:#D8E6DC;font-size:13.5px;margin-top:6px;}
+  .new-sale-cta .btn{background:var(--eg-gold);color:#3A2A05;font-size:16px;padding:15px 26px;}
+  .new-sale-cta .btn:hover{background:#E4B45E;}
+
+  /* ---- New sale: menu step ---- */
+  .step-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .step-header h2{font-size:19px;}
+  .step-crumbs{font-size:13px;color:var(--eg-muted);}
+  .step-crumbs b{color:var(--eg-green);}
+
+  /* ---- Cart ---- */
+  .layout-2col{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
+  @media (max-width:900px){.layout-2col{grid-template-columns:1fr;}}
+
+  .cart-panel{position:sticky;top:18px;}
+  .cart-items{max-height:360px;overflow-y:auto;}
+  .cart-item{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #F1EDE2;}
+  .cart-item:last-child{border-bottom:none;}
+  .cart-item .ci-name{font-weight:700;font-size:13.5px;}
+  .cart-item .ci-controls{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .cart-item .ci-controls button{width:24px;height:24px;border-radius:6px;border:1px solid var(--eg-border);background:#fff;cursor:pointer;font-size:13px;}
+  .cart-item .ci-price{font-weight:700;font-size:13.5px;white-space:nowrap;}
+  .cart-item .ci-remove{background:none;border:none;color:var(--eg-error);font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;}
+
+  .cart-total-row{display:flex;justify-content:space-between;padding:14px 0;font-size:16px;font-weight:700;border-top:1.5px solid var(--eg-border);margin-top:6px;}
+
+  /* ---- Payment ---- */
+  .pay-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+  .pay-btn{padding:16px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--eg-border);background:var(--eg-surface);cursor:pointer;font-size:14px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .pay-btn.selected{border-color:var(--eg-green);background:#F1F5EF;color:var(--eg-green);}
+  .pay-btn .pic{font-size:20px;}
+
+  /* ---- Success screen ---- */
+  .success-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;padding:50px 20px;}
+  .success-wrap .ring{width:70px;height:70px;border-radius:50%;background:var(--eg-success-bg);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+  .success-wrap h2{font-size:24px;}
+  .success-wrap p{color:var(--eg-muted);margin-top:6px;font-size:14px;}
+  .receipt{background:var(--eg-surface);border:1px solid var(--eg-border);border-radius:var(--radius);padding:20px;margin:24px 0;max-width:380px;width:100%;text-align:left;}
+  .receipt .r-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--eg-border);font-size:13.5px;}
+  .receipt .r-row:last-child{border-bottom:none;font-weight:700;font-size:15px;}
+
+  /* ---- Table (history) ---- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{text-align:left;font-size:11.5px;font-weight:700;color:var(--eg-muted);padding:0 14px 10px;border-bottom:1px solid var(--eg-border);}
+  tbody td{padding:13px 14px;border-bottom:1px solid #F1EDE2;}
+  tbody tr:last-child td{border-bottom:none;}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--eg-border);}
+  .filters input, .filters select{padding:9px 12px;border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);font-size:13px;background:var(--eg-surface);}
+
+  .conn-note{font-size:12px;color:var(--eg-muted);text-align:center;padding:10px;}
+
+  @media (max-width:640px){
+    .content{padding:14px;}
+    .tab-btn span.label{display:none;}
+  }
+
+  /* ---- Menu grid (Foods / Soups & Stews / Proteins) ---- */
+  .category-title{font-size:14px;margin:0 0 10px;color:var(--eg-muted);text-transform:uppercase;letter-spacing:.04em;}
+  .menu-section{margin-bottom:22px;}
+  .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .item-card{border:1px solid var(--eg-border);border-radius:var(--radius);padding:14px;background:#fff;position:relative;text-align:left;cursor:pointer;width:100%;font-family:inherit;}
+  .item-card.is-disabled{opacity:0.55;cursor:not-allowed;}
+  .item-card .name{font-weight:700;font-size:14.5px;}
+  .item-card .price{color:var(--eg-green);font-weight:700;font-size:13px;margin-top:3px;}
+  .item-card .status-note{font-size:11.5px;margin-top:6px;}
+  .item-card .finish-link{display:block;margin-top:10px;background:none;border:none;color:var(--eg-error);font-size:11.5px;font-weight:700;cursor:pointer;padding:0;}
+
+  /* ---- Chips: soups & proteins are shown for visibility, selected inside the food builder ---- */
+  .chip-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{display:flex;align-items:center;gap:10px;border:1px solid var(--eg-border);border-radius:999px;padding:9px 8px 9px 16px;background:#fff;font-size:13.5px;font-weight:700;}
+  .chip.is-disabled{opacity:0.55;}
+  .chip .chip-status{font-weight:600;font-size:11px;color:var(--eg-muted);}
+  .chip .finish-link{background:none;border:none;color:var(--eg-error);font-size:11px;font-weight:700;cursor:pointer;padding:6px 8px;}
+
+  /* ---- Builder modal (food + soup/stew + protein + qty) ---- */
+  .builder-field{margin-bottom:16px;}
+  .builder-field label{display:block;font-size:12.5px;font-weight:700;color:var(--eg-muted);margin-bottom:6px;}
+  .builder-field select{width:100%;padding:11px 12px;border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);font-size:14px;background:#fff;font-family:inherit;}
+  .builder-qty{display:flex;align-items:center;gap:14px;}
+  .builder-qty button{width:36px;height:36px;border-radius:9px;border:1px solid var(--eg-border);background:#fff;font-size:18px;cursor:pointer;}
+  .builder-qty span{min-width:22px;text-align:center;font-weight:700;font-size:16px;}
+  .builder-total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding-top:12px;border-top:1.5px solid var(--eg-border);margin-top:4px;}
+
+  /* ---- modal (mark-as-finished confirmation) ---- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,20,16,0.45);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;z-index:100;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--eg-surface);
+    border-radius:16px;
+    width:100%;max-width:420px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--eg-border);}
+  .modal-head h3{font-size:17px;}
+  .modal-close{background:none;border:none;font-size:20px;color:var(--eg-muted);cursor:pointer;line-height:1;padding:4px;}
+  .modal-body{padding:20px 22px;font-size:13.5px;color:var(--eg-text);line-height:1.5;}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--eg-border);}
+
+  /* ---- Seller dashboard (greeting + menu + current order) ---- */
+  .greet{background:linear-gradient(135deg,var(--eg-green),var(--eg-green-light));color:#fff;border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;}
+  .greet .eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--eg-gold);}
+  .greet h2{color:#fff;font-size:24px;margin-top:6px;}
+  .greet .sid{margin-top:10px;font-size:13px;color:#D8E6DC;}
+  .greet .sid b{color:#fff;font-size:15px;letter-spacing:.03em;}
+  .sec-cap{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--eg-muted);margin:0 0 12px;}
+  .sec-cap.big{color:var(--eg-green);font-size:14px;}
+  .mi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+  .mi{background:#fff;border:1.5px solid var(--eg-border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;}
+  .mi .mi-main{display:block;width:100%;text-align:left;background:none;border:none;padding:16px 14px 12px;min-height:76px;font-family:inherit;color:var(--eg-text);cursor:pointer;}
+  .mi .mi-main:hover{background:#F6F9F6;}
+  .mi .mi-main:active{background:#EAF2EC;}
+  .mi.static .mi-main{cursor:default;}
+  .mi.static .mi-main:hover,.mi.static .mi-main:active{background:none;}
+  .mi .nm{font-weight:800;font-size:15.5px;}
+  .mi .pr{color:var(--eg-green);font-weight:700;font-size:13.5px;margin-top:4px;}
+  .mi .fin-btn{border:none;border-top:1px solid #F1EDE2;background:#FBF8F2;color:var(--eg-error);font-size:12.5px;font-weight:700;padding:12px;cursor:pointer;font-family:inherit;}
+  .mi .fin-btn:hover{background:#FBEAE7;}
+  .mi.is-finished{background:#F5F2E9;border-style:dashed;}
+  .mi.is-finished .nm,.mi.is-finished .pr{color:#A79F8C;text-decoration:line-through;}
+  .mi .fin-tag{border-top:1px solid var(--eg-border);background:var(--eg-warn-bg);color:var(--eg-warn);font-size:12px;font-weight:800;letter-spacing:.06em;text-align:center;padding:11px;}
+  .co-line{padding:12px 0;border-bottom:1px solid #F1EDE2;}
+  .co-line:last-child{border-bottom:none;}
+  .co-top{display:flex;justify-content:space-between;gap:10px;font-weight:800;font-size:14.5px;}
+  .co-sub{font-size:13.5px;color:var(--eg-muted);margin-top:2px;}
+  .co-price{font-weight:700;margin-top:4px;font-size:14px;}
+  .co-ctl{display:flex;align-items:center;gap:10px;margin-top:8px;}
+  .co-ctl button.q{width:34px;height:34px;border-radius:8px;border:1px solid var(--eg-border);background:#fff;font-size:17px;cursor:pointer;}
+  .co-ctl .rm{background:none;border:none;color:var(--eg-error);font-size:12.5px;font-weight:700;cursor:pointer;margin-left:auto;padding:8px;}
+  .co-total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;padding:14px 0 6px;border-top:2px solid var(--eg-border);margin-top:6px;}
+  .co-pay-title{font-size:12.5px;font-weight:800;color:var(--eg-muted);letter-spacing:.06em;text-transform:uppercase;margin:12px 0 8px;}
+  .btn-complete{width:100%;padding:17px;font-size:16px;letter-spacing:.05em;margin-top:6px;}
+  .hint-box{background:var(--eg-warn-bg);color:var(--eg-warn);padding:10px 12px;border-radius:10px;font-size:12.5px;margin-bottom:12px;display:none;}
+  .err-box{background:var(--eg-error-bg);color:var(--eg-error);padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
+  .builder-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--eg-border);}
+  .builder-head .bn{font-weight:800;font-size:18px;}
+  .builder-head .bp{color:var(--eg-green);font-weight:700;}
+  .builder-qty button{width:46px;height:46px;font-size:22px;}
+  .builder-field select{padding:14px 12px;font-size:15px;}
+  .btn.tall{padding:15px 22px;}
+  .cart-panel{position:sticky;top:14px;}
+  @media (max-width:900px){.cart-panel{position:static;}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="glyph"><span>E</span></div><div class="wordmark">Eastern Gate</div></div>
+    <div class="topbar-right">
+      <button class="logout-btn" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn active" data-tab="dashboard">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      <span class="label">Today's Menu</span>
+    </button>
+    <button class="tab-btn" data-tab="history">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l2.4 12.4A2 2 0 0 0 9.36 17H18a2 2 0 0 0 2-1.6L21.6 7H6"/></svg>
+      <span class="label">My Sales</span>
+    </button>
+  </nav>
+
+  <main class="content">
+
+    <!-- ============ DASHBOARD: greeting + today's available menu + current order ============ -->
+    <section class="view active" id="view-dashboard">
+      <div class="greet">
+        <div class="eyebrow">EASTERN GATE</div>
+        <h2 id="greetLine">Good day</h2>
+        <div class="sid">Seller ID: <b id="sellerIdLine">—</b></div>
+      </div>
+
+      <div class="layout-2col">
+        <div>
+          <h3 class="sec-cap big">Today's Available Menu</h3>
+          <div id="menuGridWrap"><div class="empty-state"><p>Loading menu…</p></div></div>
+        </div>
+
+        <div class="panel cart-panel">
+          <div class="panel-head"><h2 style="font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">Current Order</h2></div>
+          <div class="panel-body">
+            <div id="orderLines"></div>
+            <div id="orderTotalRow" class="co-total" style="display:none;"><span>TOTAL</span><span id="orderTotal">GHS 0</span></div>
+
+            <div class="co-pay-title">Payment</div>
+            <div class="pay-methods" style="margin-bottom:12px;">
+              <button class="pay-btn" data-method="cash"><span class="pic">💵</span>Cash</button>
+              <button class="pay-btn" data-method="momo"><span class="pic">📱</span>Mobile Money</button>
+            </div>
+            <div class="hint-box" id="momoHint">Only complete the sale after you have confirmed the Mobile Money payment has been received.</div>
+            <div class="err-box" id="orderError"></div>
+            <button class="btn btn-primary btn-complete" id="completeSaleBtn">
+              <span class="spinner"></span><span class="btn-label">COMPLETE SALE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SALES HISTORY ============ -->
+    <section class="view" id="view-history">
+      <div class="panel">
+        <div class="panel-head"><h2>My Sales</h2></div>
+        <div class="filters">
+          <input type="text" id="histSearch" placeholder="Search transaction ID…">
+          <select id="histDateFilter">
+            <option value="">Any date</option>
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+          </select>
+        </div>
+        <div id="historyTableWrap">
+          <div class="empty-state"><p>No sales found</p><span>Sales you complete will show up here.</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <div class="conn-note" id="connNote">Not connected to the Eastern Gate server yet.</div>
+</div>
+
+<!-- Builder: Food + Soup/Stew + Protein + Quantity -->
+<div class="overlay" id="modalBuilder">
+  <div class="modal">
+    <div class="modal-head"><h3>Add to Order</h3><button class="modal-close" data-close="modalBuilder">&times;</button></div>
+    <div class="modal-body">
+      <div class="builder-head"><span class="bn" id="builderName">Fufu</span><span class="bp" id="builderPrice">GHS 25</span></div>
+      <div class="builder-field">
+        <label for="builderSoup">Soup / Stew:</label>
+        <select id="builderSoup"></select>
+      </div>
+      <div class="builder-field">
+        <label for="builderProtein">Protein:</label>
+        <select id="builderProtein"></select>
+      </div>
+      <div class="builder-field">
+        <label>Quantity:</label>
+        <div class="builder-qty">
+          <button type="button" id="builderQtyDec">−</button>
+          <span id="builderQty">1</span>
+          <button type="button" id="builderQtyInc">+</button>
+        </div>
+      </div>
+      <div class="builder-total"><span>Total</span><span id="builderTotal">GHS 0</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost tall" data-close="modalBuilder">Cancel</button>
+      <button class="btn btn-primary tall" id="builderAddBtn">Add to Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mark as finished confirmation -->
+<div class="overlay" id="modalFinish">
+  <div class="modal">
+    <div class="modal-head"><h3>Mark as Finished</h3><button class="modal-close" data-close="modalFinish">&times;</button></div>
+    <div class="modal-body" id="finishModalBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost tall" data-close="modalFinish">Cancel</button>
+      <button class="btn btn-danger tall" id="finishConfirmBtn">Mark Finished</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale complete -->
+<div class="overlay" id="modalSuccess">
+  <div class="modal">
+    <div class="modal-body" style="text-align:center;padding:28px 22px;">
+      <div class="ring" style="width:64px;height:64px;border-radius:50%;background:var(--eg-success-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#2F7A4D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 style="font-size:22px;">Sale complete</h3>
+      <div class="receipt" id="receiptWrap" style="margin:18px auto 0;"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary tall" id="successDoneBtn" style="width:100%;">Start Next Order</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap" style="position:fixed;bottom:20px;right:20px;left:20px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:200;pointer-events:none;"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================================================================
+     API SERVICE LAYER — the real Eastern Gate backend.
+     Session is carried via an httpOnly cookie.
+  ================================================================ */
+  const API_BASE = "/api";
+  async function apiCall(method, path, body){
+    let res;
+    try{
+      res = await fetch(API_BASE + path, {
+        method,
+        headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+        body: body !== undefined ? JSON.stringify(body) : undefined
+      });
+    }catch(networkErr){
+      const err = new Error("Can't reach the Eastern Gate server.");
+      err.type = "network";
+      throw err;
+    }
+    let json = null;
+    try{ json = await res.json(); }catch(e){}
+    if(!res.ok || !json || json.success === false){
+      const err = new Error((json && json.message) || "Something went wrong. Please try again.");
+      err.type = "api"; err.status = res.status;
+      throw err;
+    }
+    return json.data;
+  }
+
+  const getSession       = () => apiCall("GET", "/auth/me");
+  const logout           = () => apiCall("POST", "/auth/logout");
+  const getMenu          = () => apiCall("GET", "/menu");
+  const markItemFinished = (id) => apiCall("PATCH", "/seller/menu/" + id + "/finish");
+  const createSale       = (payload) => apiCall("POST", "/sales", payload);
+  const getMyHistory     = () => apiCall("GET", "/sales/my");
+
+  function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function gh(n){ n = Number(n || 0); return "GHS " + (Number.isInteger(n) ? n : n.toFixed(2)); }
+  function money(n){ return "GHS " + Number(n || 0).toFixed(2); }
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  function payLabel(m){ return m === "cash" ? "Cash" : "Mobile Money"; }
+
+  /* ================================================================
+     Session guard — seller-only page
+  ================================================================ */
+  let currentSeller = null;
+  (async function guard(){
+    try{
+      const session = await getSession();
+      if(!session || session.role !== "seller"){ window.location.href = "login.html"; return; }
+      currentSeller = session;
+      const h = new Date().getHours();
+      const part = h < 12 ? "morning" : (h < 17 ? "afternoon" : "evening");
+      document.getElementById("greetLine").textContent = "Good " + part + ", " + session.fullName;
+      document.getElementById("sellerIdLine").textContent = session.id;
+      document.getElementById("connNote").style.display = "none";
+      loadMenu();
+    }catch(err){
+      window.location.href = "login.html";
+    }
+  })();
+
+  /* ================================================================
+     Navigation
+  ================================================================ */
+  const views = { dashboard: document.getElementById("view-dashboard"), history: document.getElementById("view-history") };
+  function switchTab(key){
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === key));
+    Object.entries(views).forEach(([k,v]) => v.classList.toggle("active", k === key));
+    if(key === "dashboard") loadMenu();
+    if(key === "history") loadHistory();
+  }
+  document.getElementById("tabbar").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab-btn");
+    if(btn) switchTab(btn.dataset.tab);
+  });
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    try{ await logout(); }catch(e){}
+    window.location.href = "login.html";
+  });
+
+  function toast(message, type){
+    const el = document.createElement("div");
+    el.style.cssText = "background:#1C1B17;color:#fff;padding:13px 16px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:320px;pointer-events:auto;";
+    if(type === "error") el.style.background = "var(--eg-error)";
+    if(type === "success") el.style.background = "var(--eg-success)";
+    el.textContent = message;
+    document.getElementById("toastWrap").appendChild(el);
+    setTimeout(() => el.remove(), 4200);
+  }
+  function openModal(id){ document.getElementById(id).classList.add("show"); }
+  function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+  document.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", () => closeModal(el.dataset.close)));
+  document.querySelectorAll(".overlay").forEach(ov => ov.addEventListener("click", (e) => { if(e.target === ov) ov.classList.remove("show"); }));
+
+  /* ================================================================
+     Today's available menu — comes from the backend. Items the Admin
+     turned OFF are not shown at all. Items a seller marked finished
+     today are shown greyed out as FINISHED and cannot be selected.
+  ================================================================ */
+  let menuItems = [];
+  let cart = [];      // {key, foodId, foodName, foodPrice, soupId, soupName, proteinId, proteinName, proteinPrice, qty}
+  let cartKeySeq = 1;
+  let selectedPayment = null;
+
+  async function loadMenu(){
+    try{
+      menuItems = await getMenu();
+    }catch(err){
+      menuItems = [];
+      toast(err.message, "error");
+    }
+    // Drop any order lines that use something that is no longer sellable.
+    const sellable = new Set(menuItems.filter(i => i.status === "available").map(i => i.id));
+    const before = cart.length;
+    cart = cart.filter(c => sellable.has(c.foodId) && (!c.soupId || sellable.has(c.soupId)) && (!c.proteinId || sellable.has(c.proteinId)));
+    if(cart.length !== before) toast("Some items in your order just ran out and were removed.", "error");
+    renderMenu();
+    renderOrder();
+  }
+
+  function visibleOfType(type){
+    return menuItems
+      .filter(i => i.type === type && i.status !== "unavailable"); // Master Menu order
+  }
+
+  function cardHtml(it, opts){
+    const finished = it.status === "finished";
+    const price = it.type === "food" ? `<div class="pr">${gh(it.price)}</div>`
+                : it.type === "protein" ? `<div class="pr">+ ${gh(it.price)}</div>` : "";
+    const inner = `<div class="nm">${esc(it.name)}</div>${price}`;
+    const main = (opts.selectable && !finished)
+      ? `<button type="button" class="mi-main" data-food-id="${it.id}">${inner}</button>`
+      : `<div class="mi-main" style="cursor:default;">${inner}</div>`;
+    const foot = finished
+      ? `<div class="fin-tag">FINISHED</div>`
+      : `<button type="button" class="fin-btn" data-finish-id="${it.id}">Mark Finished</button>`;
+    return `<div class="mi ${opts.selectable ? "" : "static"} ${finished ? "is-finished" : ""}">${main}${foot}</div>`;
+  }
+
+  function renderMenu(){
+    const wrap = document.getElementById("menuGridWrap");
+    const foods = visibleOfType("food"), soups = visibleOfType("soup"), proteins = visibleOfType("protein");
+    if(!foods.length && !soups.length && !proteins.length){
+      wrap.innerHTML = `<div class="empty-state"><p>No menu items are available today</p><span>Ask the Admin to turn today's items on.</span></div>`;
+      return;
+    }
+    const section = (title, list, selectable, none) => `<div class="menu-section">
+      <h3 class="sec-cap">${title}</h3>
+      ${list.length ? `<div class="mi-grid">${list.map(it => cardHtml(it, { selectable })).join("")}</div>` : `<div style="font-size:13px;color:var(--eg-muted);">${none}</div>`}
+    </div>`;
+    wrap.innerHTML =
+      section("Foods", foods, true, "No foods available today.") +
+      section("Soups &amp; Stews", soups, false, "No soups or stews available today.") +
+      section("Proteins", proteins, false, "No proteins available today.");
+  }
+
+  document.getElementById("menuGridWrap").addEventListener("click", (e) => {
+    const fin = e.target.closest("[data-finish-id]");
+    if(fin) return openFinishConfirm(fin.dataset.finishId);
+    const food = e.target.closest("[data-food-id]");
+    if(food) openBuilder(food.dataset.foodId);
+  });
+
+  /* ---- Mark as finished (today only) ---- */
+  let finishTargetId = null;
+  function openFinishConfirm(itemId){
+    const item = menuItems.find(i => i.id === itemId);
+    if(!item) return;
+    finishTargetId = itemId;
+    document.getElementById("finishModalBody").textContent =
+      `Mark ${item.name} as finished for today? It will no longer be available for new orders.`;
+    openModal("modalFinish");
+  }
+  document.getElementById("finishConfirmBtn").addEventListener("click", async () => {
+    if(!finishTargetId) return;
+    const btn = document.getElementById("finishConfirmBtn");
+    btn.disabled = true;
+    try{
+      await markItemFinished(finishTargetId);
+      closeModal("modalFinish");
+      toast("Marked as finished for today.", "success");
+      await loadMenu();
+    }catch(err){
+      toast(err.message, "error");
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
+  /* ================================================================
+     Builder: food -> soup/stew -> protein -> quantity -> Add to Order.
+     The total shown here is only a convenience preview; the backend
+     recalculates the official total when the sale is completed.
+  ================================================================ */
+  let builderFoodId = null;
+  let builderQty = 1;
+
+  function fillSelect(select, items, placeholder, withPrice){
+    select.innerHTML = `<option value="">${placeholder}</option>` +
+      items.map(it => `<option value="${it.id}">${esc(it.name)}${withPrice ? " + " + gh(it.price) : ""}</option>`).join("");
+  }
+  function availableOfType(type){ return menuItems.filter(i => i.type === type && i.status === "available"); }
+
+  function openBuilder(foodId){
+    const food = menuItems.find(i => i.id === foodId);
+    if(!food || food.status !== "available") return;
+    builderFoodId = foodId;
+    builderQty = 1;
+    document.getElementById("builderName").textContent = food.name;
+    document.getElementById("builderPrice").textContent = gh(food.price);
+    fillSelect(document.getElementById("builderSoup"), availableOfType("soup"), "Select Soup/Stew", false);
+    fillSelect(document.getElementById("builderProtein"), availableOfType("protein"), "Select Protein", true);
+    document.getElementById("builderQty").textContent = builderQty;
+    updateBuilderTotal();
+    openModal("modalBuilder");
+  }
+  function updateBuilderTotal(){
+    const food = menuItems.find(i => i.id === builderFoodId);
+    if(!food) return;
+    const pid = document.getElementById("builderProtein").value;
+    const protein = pid ? menuItems.find(i => i.id === pid) : null;
+    const unit = Number(food.price) + (protein ? Number(protein.price) : 0); // soup/stew adds GHS 0
+    document.getElementById("builderTotal").textContent = gh(unit * builderQty);
+  }
+  document.getElementById("builderProtein").addEventListener("change", updateBuilderTotal);
+  document.getElementById("builderQtyInc").addEventListener("click", () => { builderQty += 1; document.getElementById("builderQty").textContent = builderQty; updateBuilderTotal(); });
+  document.getElementById("builderQtyDec").addEventListener("click", () => { builderQty = Math.max(1, builderQty - 1); document.getElementById("builderQty").textContent = builderQty; updateBuilderTotal(); });
+
+  document.getElementById("builderAddBtn").addEventListener("click", () => {
+    const food = menuItems.find(i => i.id === builderFoodId);
+    if(!food) return;
+    const soup = menuItems.find(i => i.id === document.getElementById("builderSoup").value) || null;
+    const protein = menuItems.find(i => i.id === document.getElementById("builderProtein").value) || null;
+    cart.push({
+      key: "c" + (cartKeySeq++),
+      foodId: food.id, foodName: food.name, foodPrice: Number(food.price),
+      soupId: soup ? soup.id : null, soupName: soup ? soup.name : null,
+      proteinId: protein ? protein.id : null, proteinName: protein ? protein.name : null,
+      proteinPrice: protein ? Number(protein.price) : 0,
+      qty: builderQty
+    });
+    closeModal("modalBuilder");
+    renderOrder();
+  });
+
+  /* ================================================================
+     Current Order
+  ================================================================ */
+  function unitPrice(c){ return c.foodPrice + (c.proteinPrice || 0); }
+  function cartTotal(){ return cart.reduce((sum, c) => sum + unitPrice(c) * c.qty, 0); }
+
+  function renderOrder(){
+    const lines = document.getElementById("orderLines");
+    const totalRow = document.getElementById("orderTotalRow");
+    if(!cart.length){
+      lines.innerHTML = `<div style="padding:18px 0;text-align:center;color:var(--eg-muted);font-size:13.5px;">No items yet.<br>Tap a food to start the order.</div>`;
+      totalRow.style.display = "none";
+      return;
+    }
+    lines.innerHTML = cart.map(c => `<div class="co-line" data-key="${c.key}">
+      <div class="co-top"><span>${esc(c.foodName)} × ${c.qty}</span></div>
+      ${c.soupName ? `<div class="co-sub">${esc(c.soupName)}</div>` : ""}
+      ${c.proteinName ? `<div class="co-sub">${esc(c.proteinName)}</div>` : ""}
+      <div class="co-price">${gh(unitPrice(c) * c.qty)}</div>
+      <div class="co-ctl">
+        <button class="q dec" aria-label="Less">−</button><span style="font-weight:700;min-width:18px;text-align:center;">${c.qty}</span><button class="q inc" aria-label="More">+</button>
+        <button class="rm">Remove</button>
+      </div>
+    </div>`).join("");
+    totalRow.style.display = "";
+    document.getElementById("orderTotal").textContent = gh(cartTotal());
+  }
+
+  document.getElementById("orderLines").addEventListener("click", (e) => {
+    const row = e.target.closest(".co-line");
+    if(!row) return;
+    const line = cart.find(c => c.key === row.dataset.key);
+    if(!line) return;
+    if(e.target.closest(".inc")) line.qty += 1;
+    else if(e.target.closest(".dec")){ line.qty -= 1; if(line.qty <= 0) cart = cart.filter(c => c.key !== line.key); }
+    else if(e.target.closest(".rm")) cart = cart.filter(c => c.key !== line.key);
+    else return;
+    renderOrder();
+  });
+
+  /* ---- Payment: Cash or Mobile Money only ---- */
+  document.querySelectorAll(".pay-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".pay-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedPayment = btn.dataset.method; // "cash" | "momo"
+      document.getElementById("momoHint").style.display = selectedPayment === "momo" ? "block" : "none";
+      document.getElementById("orderError").style.display = "none";
+    });
+  });
+
+  function showOrderError(msg){
+    const box = document.getElementById("orderError");
+    box.textContent = msg; box.style.display = "block";
+  }
+
+  document.getElementById("completeSaleBtn").addEventListener("click", async () => {
+    document.getElementById("orderError").style.display = "none";
+    if(!cart.length) return showOrderError("Add at least one item to the order first.");
+    if(!selectedPayment) return showOrderError("Choose Cash or Mobile Money to continue.");
+
+    const btn = document.getElementById("completeSaleBtn");
+    btn.classList.add("loading"); btn.disabled = true;
+    try{
+      const tx = await createSale({
+        items: cart.map(c => ({ foodId: c.foodId, soupId: c.soupId, proteinId: c.proteinId, quantity: c.qty })),
+        paymentMethod: selectedPayment
+      });
+      showSuccess(tx);
+    }catch(err){
+      showOrderError(err.message);
+      loadMenu(); // pick up anything that just finished
+    }finally{
+      btn.classList.remove("loading"); btn.disabled = false;
+    }
+  });
+
+  function showSuccess(tx){
+    document.getElementById("receiptWrap").innerHTML = `
+      <div class="r-row"><span>Transaction ID</span><span>${esc(tx.transactionId)}</span></div>
+      <div class="r-row"><span>Date / time</span><span>${esc(tx.date)} ${esc(tx.time || "")}</span></div>
+      <div class="r-row"><span>Payment</span><span>${payLabel(tx.paymentMethod)}</span></div>
+      <div class="r-row"><span>Total</span><span>${money(tx.total)}</span></div>`;
+    openModal("modalSuccess");
+  }
+  document.getElementById("successDoneBtn").addEventListener("click", () => {
+    closeModal("modalSuccess");
+    cart = []; selectedPayment = null;
+    document.querySelectorAll(".pay-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("momoHint").style.display = "none";
+    renderOrder();
+    loadMenu();
+  });
+
+  /* ================================================================
+     My Sales (own sales only — enforced server-side by /sales/my)
+  ================================================================ */
+  let historyCache = [];
+  async function loadHistory(){
+    try{
+      historyCache = await getMyHistory();
+      renderHistory(applyHistoryFilters(historyCache));
+    }catch(err){
+      historyCache = [];
+      renderHistory([]);
+    }
+  }
+  function applyHistoryFilters(list){
+    const search = document.getElementById("histSearch").value.trim().toLowerCase();
+    const dateSel = document.getElementById("histDateFilter").value;
+    return list.filter(t => {
+      if(search && !t.transactionId.toLowerCase().includes(search)) return false;
+      if(dateSel === "today" && t.date !== todayStr()) return false;
+      if(dateSel === "week"){
+        const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6);
+        if(new Date(t.date) < weekAgo) return false;
+      }
+      return true;
+    });
+  }
+  function renderHistory(list){
+    const wrap = document.getElementById("historyTableWrap");
+    if(!list.length){
+      wrap.innerHTML = `<div class="empty-state"><p>No sales found</p><span>Sales you complete will show up here.</span></div>`;
+      return;
+    }
+    wrap.innerHTML = `<div style="overflow-x:auto;"><table><thead><tr><th>Date/Time</th><th>Transaction ID</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+      <tbody>${list.map(t => `<tr>
+        <td>${new Date(t.createdAt).toLocaleString()}</td>
+        <td>${esc(t.transactionId)}</td>
+        <td>${(t.items||[]).map(i => `${esc(i.name)} ×${i.quantity}`).join(", ")}</td>
+        <td>${money(t.total)}</td>
+        <td>${payLabel(t.paymentMethod)}</td>
+        <td><span class="badge ${t.status === 'completed' ? 'badge-success' : 'badge-muted'}">${esc(t.status)}</span></td>
+      </tr>`).join("")}</tbody></table></div>`;
+  }
+  document.getElementById("histSearch").addEventListener("input", () => renderHistory(applyHistoryFilters(historyCache)));
+  document.getElementById("histDateFilter").addEventListener("input", () => renderHistory(applyHistoryFilters(historyCache)));
+
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eastern Gate — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --eg-green:#14432A;
+    --eg-green-dark:#0D2E1C;
+    --eg-green-light:#1F5C3B;
+    --eg-gold:#D9A441;
+    --eg-gold-dark:#B8842E;
+    --eg-rust:#C1502E;
+    --eg-bg:#FBF8F2;
+    --eg-surface:#FFFFFF;
+    --eg-text:#1C1B17;
+    --eg-muted:#6B6558;
+    --eg-border:#E4DFD1;
+    --eg-success:#2F7A4D;
+    --eg-success-bg:#E7F2EA;
+    --eg-error:#C0392B;
+    --eg-error-bg:#FBEAE7;
+    --eg-warn-bg:#FBF3DF;
+    --radius:10px;
+    --radius-sm:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--eg-text);
+    background:var(--eg-bg);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+
+  .screen{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  }
+
+  /* ---------- Brand panel ---------- */
+  .brand{
+    position:relative;
+    background:linear-gradient(165deg,var(--eg-green-dark) 0%,var(--eg-green) 55%,var(--eg-green-light) 100%);
+    color:#F6F1E4;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:56px 60px;
+    overflow:hidden;
+  }
+  .brand::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:repeating-linear-gradient(
+      115deg,
+      rgba(217,164,65,0.10) 0px,
+      rgba(217,164,65,0.10) 2px,
+      transparent 2px,
+      transparent 34px
+    );
+    pointer-events:none;
+  }
+  .brand::after{
+    content:"";
+    position:absolute;
+    right:-120px;
+    bottom:-120px;
+    width:420px;
+    height:420px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(217,164,65,0.16),transparent 70%);
+  }
+  .brand-mark{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand-mark .glyph{
+    width:38px;height:38px;
+    border:2px solid var(--eg-gold);
+    border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+    color:var(--eg-gold);
+    transform:rotate(45deg);
+    flex-shrink:0;
+  }
+  .brand-mark .glyph span{transform:rotate(-45deg);}
+  .brand-mark .wordmark{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    letter-spacing:0.02em;
+  }
+  .brand-copy{position:relative;max-width:420px;}
+  .brand-copy h1{
+    font-size:clamp(32px,3.4vw,44px);
+    font-weight:500;
+    line-height:1.15;
+    color:#fff;
+  }
+  .brand-copy p{
+    margin-top:18px;
+    font-size:16px;
+    line-height:1.6;
+    color:#D8E6DC;
+  }
+  .brand-foot{
+    position:relative;
+    display:flex;
+    gap:28px;
+    font-size:13px;
+    color:#B9CEC0;
+  }
+  .brand-foot div{display:flex;flex-direction:column;gap:2px;}
+  .brand-foot b{color:#F0E6C8;font-family:'Fraunces',serif;font-size:15px;font-weight:500;}
+
+  /* ---------- Form panel ---------- */
+  .form-side{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 28px;
+    background:var(--eg-bg);
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+  }
+  .card-head{margin-bottom:26px;}
+  .card-head h2{font-size:26px;font-weight:500;}
+  .card-head p{margin-top:6px;color:var(--eg-muted);font-size:14.5px;}
+
+  .role-toggle{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:#EFEAE0;
+    border-radius:999px;
+    padding:4px;
+    margin-bottom:28px;
+  }
+  .role-toggle button{
+    border:none;
+    background:transparent;
+    padding:10px 14px;
+    border-radius:999px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--eg-muted);
+    cursor:pointer;
+    transition:background .18s ease, color .18s ease;
+  }
+  .role-toggle button.active{
+    background:var(--eg-green);
+    color:#fff;
+    box-shadow:0 2px 6px rgba(20,67,42,0.25);
+  }
+
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:7px;
+    color:var(--eg-text);
+  }
+  .field .hint{font-weight:400;color:var(--eg-muted);font-size:12.5px;margin-left:4px;}
+  .input-wrap{position:relative;}
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"]{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--eg-border);
+    border-radius:var(--radius-sm);
+    background:var(--eg-surface);
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+    color:var(--eg-text);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input::placeholder{color:#B4AC9B;}
+  input:focus{
+    border-color:var(--eg-green);
+    box-shadow:0 0 0 3px rgba(20,67,42,0.12);
+  }
+  input.invalid{border-color:var(--eg-error);}
+  input.invalid:focus{box-shadow:0 0 0 3px rgba(192,57,43,0.12);}
+  .field-error{
+    display:none;
+    font-size:12.5px;
+    color:var(--eg-error);
+    margin-top:6px;
+  }
+  .field.has-error .field-error{display:block;}
+
+  .pin-input{letter-spacing:6px;font-size:18px;font-weight:600;}
+
+  .toggle-visibility{
+    position:absolute;
+    right:6px;top:50%;
+    transform:translateY(-50%);
+    background:none;border:none;
+    padding:6px 8px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--eg-green);
+    cursor:pointer;
+    border-radius:6px;
+  }
+  .toggle-visibility:hover{background:#EFEAE0;}
+
+  .btn{
+    width:100%;
+    padding:13px 16px;
+    border-radius:var(--radius-sm);
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transition:background .15s ease, opacity .15s ease, transform .1s ease;
+  }
+  .btn-primary{background:var(--eg-green);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:var(--eg-green-light);}
+  .btn-primary:active:not(:disabled){transform:translateY(1px);}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+  .spinner{
+    width:16px;height:16px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  .btn.loading .spinner{display:inline-block;}
+  .btn.loading .btn-label{opacity:0.85;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .switch-row{
+    margin-top:18px;
+    text-align:center;
+    font-size:13.5px;
+    color:var(--eg-muted);
+  }
+  .switch-row button{
+    background:none;border:none;
+    color:var(--eg-green);
+    font-weight:700;
+    cursor:pointer;
+    font-size:13.5px;
+    padding:0;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+
+  .banner{
+    display:none;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 14px;
+    border-radius:var(--radius-sm);
+    font-size:13.5px;
+    line-height:1.45;
+    margin-bottom:18px;
+  }
+  .banner.show{display:flex;}
+  .banner.error{background:var(--eg-error-bg);color:var(--eg-error);}
+  .banner.success{background:var(--eg-success-bg);color:var(--eg-success);}
+  .banner.info{background:var(--eg-warn-bg);color:#8A6416;}
+  .banner .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:currentColor;
+    margin-top:6px;flex-shrink:0;
+  }
+
+  .form-panel{display:none;}
+  .form-panel.active{display:block;}
+
+  .success-check{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:20px 0 4px;
+  }
+  .success-check.show{display:flex;}
+  .success-check .ring{
+    width:56px;height:56px;
+    border-radius:50%;
+    background:var(--eg-success-bg);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:16px;
+  }
+  .success-check svg{width:26px;height:26px;}
+  .success-check h3{font-size:19px;font-weight:500;margin-bottom:6px;}
+  .success-check p{color:var(--eg-muted);font-size:13.5px;}
+
+  @media (max-width: 880px){
+    .screen{grid-template-columns:1fr;}
+    .brand{padding:40px 32px;min-height:220px;}
+    .brand-foot{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <!-- Brand panel -->
+  <div class="brand">
+    <div class="brand-mark">
+      <div class="glyph"><span>E</span></div>
+      <div class="wordmark">Eastern Gate</div>
+    </div>
+
+    <div class="brand-copy">
+      <h1>Run the counter, not the chaos.</h1>
+      <p>Eastern Gate keeps your sellers, your menu and your sales in one place — built for fast-moving chop bar floors.</p>
+    </div>
+
+    <div class="brand-foot">
+      <div><b>Simple</b>Fast checkout for busy hours</div>
+      <div><b>Accurate</b>Every price recorded, every time</div>
+      <div><b>Yours</b>Full control for the owner</div>
+    </div>
+  </div>
+
+  <!-- Form panel -->
+  <div class="form-side">
+    <div class="card">
+
+      <div class="role-toggle" id="roleToggle">
+        <button type="button" class="active" data-role="admin">Admin</button>
+        <button type="button" data-role="seller">Seller</button>
+      </div>
+
+      <!-- ============ ADMIN LOGIN ============ -->
+      <div class="form-panel active" id="panel-admin-login">
+        <div class="card-head">
+          <h2>Welcome back</h2>
+          <p>Sign in to manage Eastern Gate.</p>
+        </div>
+
+        <div class="banner error" id="adminLoginBanner">
+          <div class="dot"></div>
+          <div id="adminLoginBannerText"></div>
+        </div>
+
+        <form id="adminLoginForm" novalidate>
+          <div class="field" id="f-admin-id">
+            <label for="adminId">Username or email</label>
+            <input type="text" id="adminId" name="adminId" placeholder="e.g. owner@easterngate.com" autocomplete="username">
+            <div class="field-error">Enter your username or email.</div>
+          </div>
+
+          <div class="field" id="f-admin-pass">
+            <label for="adminPass">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="adminPass" name="adminPass" placeholder="Enter your password" autocomplete="current-password">
+              <button type="button" class="toggle-visibility" data-target="adminPass">Show</button>
+            </div>
+            <div class="field-error">Enter your password.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="adminLoginBtn">
+            <span class="spinner"></span>
+            <span class="btn-label">Sign in</span>
+          </button>
+        </form>
+
+        <div class="success-check" id="adminLoginSuccess">
+          <div class="ring">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#2F7A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Signed in</h3>
+          <p>Taking you to the admin dashboard…</p>
+        </div>
+
+        <div class="switch-row">
+          First time setting up Eastern Gate? <button type="button" id="goToSetup">Create the admin account</button>
+        </div>
+      </div>
+
+      <!-- ============ ADMIN FIRST-TIME SETUP ============ -->
+      <div class="form-panel" id="panel-admin-setup">
+        <div class="card-head">
+          <h2>Set up Eastern Gate</h2>
+          <p>Create the owner account. You'll use this to sign in from now on.</p>
+        </div>
+
+        <div class="banner error" id="setupBanner">
+          <div class="dot"></div>
+          <div id="setupBannerText"></div>
+        </div>
+
+        <form id="adminSetupForm" novalidate>
+          <div class="field" id="f-setup-name">
+            <label for="setupName">Full name</label>
+            <input type="text" id="setupName" name="setupName" placeholder="e.g. Ama Boateng" autocomplete="name">
+            <div class="field-error">Enter your full name.</div>
+          </div>
+
+          <div class="field" id="f-setup-id">
+            <label for="setupId">Username or email</label>
+            <input type="text" id="setupId" name="setupId" placeholder="e.g. owner@easterngate.com" autocomplete="username">
+            <div class="field-error">Enter a username or email.</div>
+          </div>
+
+          <div class="field" id="f-setup-pass">
+            <label for="setupPass">Create password<span class="hint">min. 8 characters</span></label>
+            <div class="input-wrap">
+              <input type="password" id="setupPass" name="setupPass" placeholder="Create a password" autocomplete="new-password">
+              <button type="button" class="toggle-visibility" data-target="setupPass">Show</button>
+            </div>
+            <div class="field-error">Password must be at least 8 characters.</div>
+          </div>
+
+          <div class="field" id="f-setup-confirm">
+            <label for="setupConfirm">Confirm password</label>
+            <div class="input-wrap">
+              <input type="password" id="setupConfirm" name="setupConfirm" placeholder="Re-enter your password" autocomplete="new-password">
+              <button type="button" class="toggle-visibility" data-target="setupConfirm">Show</button>
+            </div>
+            <div class="field-error">Passwords do not match.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="setupBtn">
+            <span class="spinner"></span>
+            <span class="btn-label">Create admin account</span>
+          </button>
+        </form>
+
+        <div class="success-check" id="setupSuccess">
+          <div class="ring">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#2F7A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Account created</h3>
+          <p>Taking you to the admin dashboard…</p>
+        </div>
+
+        <div class="switch-row">
+          Already have an account? <button type="button" id="goToAdminLogin">Sign in instead</button>
+        </div>
+      </div>
+
+      <!-- ============ SELLER LOGIN ============ -->
+      <div class="form-panel" id="panel-seller-login">
+        <div class="card-head">
+          <h2>Seller sign in</h2>
+          <p>Enter the Seller ID and PIN given to you by your admin.</p>
+        </div>
+
+        <div class="banner error" id="sellerLoginBanner">
+          <div class="dot"></div>
+          <div id="sellerLoginBannerText"></div>
+        </div>
+
+        <form id="sellerLoginForm" novalidate>
+          <div class="field" id="f-seller-id">
+            <label for="sellerId">Seller ID<span class="hint">e.g. EG-1047</span></label>
+            <input type="text" id="sellerId" name="sellerId" placeholder="EG-XXXX" autocomplete="username">
+            <div class="field-error">Enter your Seller ID.</div>
+          </div>
+
+          <div class="field" id="f-seller-pin">
+            <label for="sellerPin">PIN<span class="hint">4 digits</span></label>
+            <div class="input-wrap">
+              <input type="password" id="sellerPin" name="sellerPin" placeholder="••••" maxlength="4" inputmode="numeric" class="pin-input" autocomplete="current-password">
+              <button type="button" class="toggle-visibility" data-target="sellerPin">Show</button>
+            </div>
+            <div class="field-error">Enter your 4-digit PIN.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="sellerLoginBtn">
+            <span class="spinner"></span>
+            <span class="btn-label">Sign in</span>
+          </button>
+        </form>
+
+        <div class="success-check" id="sellerLoginSuccess">
+          <div class="ring">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#2F7A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Signed in</h3>
+          <p>Taking you to the seller dashboard…</p>
+        </div>
+
+        <div class="switch-row" style="visibility:hidden">placeholder</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ----------------------------------------------------------------
+     API SERVICE LAYER
+     These functions are the seams where the future Node.js + Express
+     backend connects. They call real endpoints; today those endpoints
+     don't exist yet, so calls will fail and the UI shows an honest
+     connection error rather than pretending to succeed.
+  ---------------------------------------------------------------- */
+  const API_BASE = "/api";
+
+  async function apiPost(path, body){
+    let res;
+    try{
+      res = await fetch(API_BASE + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    }catch(networkErr){
+      const err = new Error("Can't reach the Eastern Gate server. Check your connection and try again.");
+      err.type = "network";
+      throw err;
+    }
+    let json = null;
+    try{ json = await res.json(); }catch(e){ /* no/invalid body */ }
+    if(!res.ok || !json || json.success === false){
+      const err = new Error((json && json.message) || "Something went wrong. Please try again.");
+      err.type = "api";
+      err.status = res.status;
+      throw err;
+    }
+    return json.data;
+  }
+
+  async function apiGet(path){
+    let res;
+    try{
+      res = await fetch(API_BASE + path, { method: "GET" });
+    }catch(networkErr){
+      const err = new Error("Can't reach the Eastern Gate server.");
+      err.type = "network";
+      throw err;
+    }
+    let json = null;
+    try{ json = await res.json(); }catch(e){}
+    if(!res.ok || !json || json.success === false){
+      const err = new Error((json && json.message) || "Something went wrong.");
+      err.type = "api"; err.status = res.status;
+      throw err;
+    }
+    return json.data;
+  }
+
+  function loginAdmin(payload){ return apiPost("/auth/admin-login", payload); }
+  function setupAdmin(payload){ return apiPost("/auth/setup", payload); }
+  function loginSeller(payload){ return apiPost("/auth/seller-login", payload); }
+  function getSetupStatus(){ return apiGet("/auth/setup-status"); }
+  function getCurrentSession(){ return apiGet("/auth/me"); }
+
+  /* ---------------------------------------------------------------- */
+
+  const roleToggle = document.getElementById("roleToggle");
+  const panels = {
+    admin: document.getElementById("panel-admin-login"),
+    setup: document.getElementById("panel-admin-setup"),
+    seller: document.getElementById("panel-seller-login")
+  };
+
+  function showPanel(key){
+    Object.values(panels).forEach(p => p.classList.remove("active"));
+    panels[key].classList.add("active");
+  }
+
+  roleToggle.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-role]");
+    if(!btn) return;
+    roleToggle.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    showPanel(btn.dataset.role === "admin" ? "admin" : "seller");
+  });
+
+  document.getElementById("goToSetup").addEventListener("click", () => showPanel("setup"));
+  document.getElementById("goToAdminLogin").addEventListener("click", () => {
+    roleToggle.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.role === "admin"));
+    showPanel("admin");
+  });
+
+  // Show/hide password toggles
+  document.querySelectorAll(".toggle-visibility").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      btn.textContent = isHidden ? "Hide" : "Show";
+    });
+  });
+
+  // Seller PIN: numeric only
+  const sellerPin = document.getElementById("sellerPin");
+  sellerPin.addEventListener("input", () => {
+    sellerPin.value = sellerPin.value.replace(/[^0-9]/g, "").slice(0,4);
+  });
+
+  function setFieldError(fieldId, isError){
+    document.getElementById(fieldId).classList.toggle("has-error", isError);
+    const input = document.getElementById(fieldId).querySelector("input");
+    if(input) input.classList.toggle("invalid", isError);
+  }
+
+  function setBanner(bannerId, textId, message, type){
+    const banner = document.getElementById(bannerId);
+    banner.className = "banner show" + (type ? " " + type : " error");
+    document.getElementById(textId).textContent = message;
+  }
+  function hideBanner(bannerId){
+    document.getElementById(bannerId).classList.remove("show");
+  }
+
+  function setLoading(btn, isLoading){
+    btn.classList.toggle("loading", isLoading);
+    btn.disabled = isLoading;
+  }
+
+  /* ---------------- Admin login ---------------- */
+  const adminLoginForm = document.getElementById("adminLoginForm");
+  const adminLoginBtn = document.getElementById("adminLoginBtn");
+
+  adminLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideBanner("adminLoginBanner");
+    const id = document.getElementById("adminId").value.trim();
+    const pass = document.getElementById("adminPass").value;
+
+    let valid = true;
+    setFieldError("f-admin-id", !id); if(!id) valid = false;
+    setFieldError("f-admin-pass", !pass); if(!pass) valid = false;
+    if(!valid) return;
+
+    setLoading(adminLoginBtn, true);
+    try{
+      await loginAdmin({ username: id, password: pass });
+      adminLoginForm.style.display = "none";
+      document.getElementById("adminLoginSuccess").classList.add("show");
+      setTimeout(() => { window.location.href = "admin.html"; }, 700);
+    }catch(err){
+      setBanner("adminLoginBanner", "adminLoginBannerText",
+        err.type === "network"
+          ? err.message
+          : (err.status === 401 ? "Incorrect username or password." : err.message));
+    }finally{
+      setLoading(adminLoginBtn, false);
+    }
+  });
+
+  /* ---------------- Admin first-time setup ---------------- */
+  const setupForm = document.getElementById("adminSetupForm");
+  const setupBtn = document.getElementById("setupBtn");
+
+  setupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideBanner("setupBanner");
+    const name = document.getElementById("setupName").value.trim();
+    const id = document.getElementById("setupId").value.trim();
+    const pass = document.getElementById("setupPass").value;
+    const confirm = document.getElementById("setupConfirm").value;
+
+    let valid = true;
+    setFieldError("f-setup-name", !name); if(!name) valid = false;
+    setFieldError("f-setup-id", !id); if(!id) valid = false;
+    const passInvalid = pass.length < 8;
+    setFieldError("f-setup-pass", passInvalid); if(passInvalid) valid = false;
+    const confirmInvalid = confirm !== pass || !confirm;
+    setFieldError("f-setup-confirm", confirmInvalid); if(confirmInvalid) valid = false;
+    if(!valid) return;
+
+    setLoading(setupBtn, true);
+    try{
+      await setupAdmin({ fullName: name, username: id, password: pass, confirmPassword: confirm });
+      setupForm.style.display = "none";
+      document.getElementById("setupSuccess").classList.add("show");
+      setTimeout(() => { window.location.href = "admin.html"; }, 700);
+    }catch(err){
+      setBanner("setupBanner", "setupBannerText", err.message);
+    }finally{
+      setLoading(setupBtn, false);
+    }
+  });
+
+  /* ---------------- Seller login ---------------- */
+  const sellerLoginForm = document.getElementById("sellerLoginForm");
+  const sellerLoginBtn = document.getElementById("sellerLoginBtn");
+
+  sellerLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideBanner("sellerLoginBanner");
+    const id = document.getElementById("sellerId").value.trim();
+    const pin = sellerPin.value;
+
+    let valid = true;
+    setFieldError("f-seller-id", !id); if(!id) valid = false;
+    const pinInvalid = pin.length !== 4;
+    setFieldError("f-seller-pin", pinInvalid); if(pinInvalid) valid = false;
+    if(!valid) return;
+
+    setLoading(sellerLoginBtn, true);
+    try{
+      await loginSeller({ sellerId: id, pin });
+      sellerLoginForm.style.display = "none";
+      document.getElementById("sellerLoginSuccess").classList.add("show");
+      setTimeout(() => { window.location.href = "seller.html"; }, 700);
+    }catch(err){
+      let msg = err.message;
+      if(err.type === "api" && err.status === 401) msg = "Seller ID or PIN is incorrect.";
+      if(err.type === "api" && err.status === 403) msg = "This seller account has been deactivated. See your admin.";
+      setBanner("sellerLoginBanner", "sellerLoginBannerText", msg);
+    }finally{
+      setLoading(sellerLoginBtn, false);
+    }
+  });
+
+  /* ---------------- On load: detect first-run + existing session ---------------- */
+  (async function init(){
+    // If a valid session already exists, skip straight to the right app.
+    try{
+      const session = await getCurrentSession();
+      if(session && session.role === "admin"){ window.location.href = "admin.html"; return; }
+      if(session && session.role === "seller"){ window.location.href = "seller.html"; return; }
+    }catch(e){ /* not logged in - stay on this page */ }
+
+    // If no admin account exists yet, open straight to first-time setup.
+    try{
+      const status = await getSetupStatus();
+      if(status && status.completed === false){
+        showPanel("setup");
+      }
+    }catch(e){ /* backend not reachable yet - default admin login view is fine */ }
+  })();
+
+})();
+</script>
+</body>
+</html>
