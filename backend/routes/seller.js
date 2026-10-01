@@ -1,6 +1,7 @@
 const express = require('express');
 const { getData, persist } = require('../lib/db');
-const { nextTransactionId } = require('../lib/ids');
+const { recordSale } = require('../lib/sales');
+const { ACTIVE, changeOrderStatus, staffView } = require('../lib/orders');
 const { priceCart, findMenuItem } = require('../lib/pricing');
 const { computeStatus, todayStr, withStatus } = require('../lib/menuStatus');
 const { ok, created, fail, asyncHandler } = require('../lib/respond');
@@ -37,6 +38,41 @@ router.patch(
   })
 );
 
+// GET /api/seller/orders
+// Customer (QR table) orders that still need work — new, preparing or ready —
+// oldest first so the longest-waiting table is at the top. Shared by every
+// seller: whoever is on shift sees the same list.
+router.get(
+  '/orders',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const list = data.orders
+      .filter((o) => ACTIVE.includes(o.status))
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      .map(staffView);
+    ok(res, list);
+  })
+);
+
+// PATCH /api/seller/orders/:id/status  { status, paymentMethod? }
+// new -> preparing -> ready -> completed (or cancelled). Completing needs the
+// payment method the seller actually received, and records a normal sale.
+router.patch(
+  '/orders/:id/status',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const order = data.orders.find((o) => o.orderId === req.params.id);
+    if (!order) return fail(res, 404, 'Order not found.');
+    try {
+      changeOrderStatus(data, order, req.body.status, req.user, req.body.paymentMethod);
+    } catch (err) {
+      return fail(res, err.status || 400, err.message);
+    }
+    await persist();
+    ok(res, staffView(order), 'Order updated.');
+  })
+);
+
 // POST /api/sales  { items: [{itemId, quantity}], paymentMethod }
 // Mounted separately at /api/sales — see server.js.
 async function createSale(req, res) {
@@ -53,25 +89,8 @@ async function createSale(req, res) {
     return fail(res, err.status || 400, err.message);
   }
 
-  const now = new Date();
-  const transactionId = nextTransactionId(data, now);
+  const sale = recordSale(data, { seller: { id: req.user.id, fullName: req.user.fullName }, priced, paymentMethod });
 
-  const sale = {
-    transactionId,
-    sellerId: req.user.id,
-    sellerName: req.user.fullName,
-    items: priced.items,
-    subtotal: priced.subtotal,
-    total: priced.total,
-    paymentMethod,
-    status: 'completed',
-    date: now.toISOString().slice(0, 10),
-    time: now.toISOString().slice(11, 16),
-    createdAt: now.toISOString(),
-    cancelledAt: null
-  };
-
-  data.sales.push(sale);
   await persist();
   created(res, sale, 'Sale created successfully.');
 }

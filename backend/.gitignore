@@ -1,2 +1,8 @@
 node_modules/
 .env
+# Live restaurant data must NEVER be committed: a committed data.json overwrites
+# the live data with the repo copy on every deploy.
+data.json
+data.json.bak
+data.json.tmp
+data.json.corrupt-*

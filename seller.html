@@ -279,6 +279,35 @@
   .btn.tall{padding:15px 22px;}
   .cart-panel{position:sticky;top:14px;}
   @media (max-width:900px){.cart-panel{position:static;}}
+
+  /* ---- customer (QR) orders ---- */
+  .badge-warn{background:var(--eg-warn-bg);color:var(--eg-warn);}
+  .badge-info{background:#E6EEF8;color:#24507E;}
+  .cust-orders{margin-bottom:22px;}
+  .cust-orders .none{background:var(--eg-surface);border:1px dashed var(--eg-border);border-radius:var(--radius);padding:16px;font-size:13.5px;color:var(--eg-muted);}
+  .oc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+  .oc{background:var(--eg-surface);border:2px solid var(--eg-border);border-radius:var(--radius);padding:14px;}
+  .oc.is-new{border-color:var(--eg-gold);background:#FFFBF0;}
+  .oc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+  .oc-table{font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+  .oc-id{font-size:12px;color:var(--eg-muted);margin-bottom:8px;}
+  .oc-items{font-size:14px;line-height:1.45;margin-bottom:10px;}
+  .oc-items .sub{color:var(--eg-muted);font-size:13px;}
+  .oc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .oc-total{font-weight:800;font-size:16px;}
+  .opay-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:8px 0 12px;}
+  .opay{padding:14px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--eg-border);background:var(--eg-surface);cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;color:var(--eg-text);}
+  .opay.selected{border-color:var(--eg-green);background:#F1F5EF;color:var(--eg-green);}
+  .builder-qty input{width:80px;height:46px;text-align:center;font-size:18px;font-weight:700;border:1.5px solid var(--eg-border);border-radius:9px;font-family:inherit;}
+  .prot-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1EDE2;}
+  .prot-row:last-child{border-bottom:none;}
+  .prot-row .pn{font-weight:700;font-size:14.5px;}
+  .prot-row .pp{color:var(--eg-green);font-size:13px;font-weight:700;}
+  .prot-row .pq{display:flex;align-items:center;gap:8px;}
+  .prot-row .pq button{width:38px;height:38px;border-radius:9px;border:1px solid var(--eg-border);background:#fff;font-size:18px;cursor:pointer;}
+  .prot-row .pq span{min-width:20px;text-align:center;font-weight:800;}
+  .prot-row.on .pn{color:var(--eg-green);}
+  .builder-note{font-size:12.5px;color:var(--eg-muted);margin:-6px 0 14px;}
 </style>
 </head>
 <body>
@@ -312,9 +341,14 @@
         <div class="sid">Seller ID: <b id="sellerIdLine">—</b></div>
       </div>
 
+      <div class="cust-orders">
+        <h3 class="sec-cap big">New Customer Orders</h3>
+        <div id="custOrdersWrap"><div class="none">Loading…</div></div>
+      </div>
+
       <div class="layout-2col">
         <div>
-          <h3 class="sec-cap big">Today's Available Menu</h3>
+          <h3 class="sec-cap big">Today's Menu</h3>
           <div id="menuGridWrap"><div class="empty-state"><p>Loading menu…</p></div></div>
         </div>
 
@@ -368,21 +402,22 @@
     <div class="modal-body">
       <div class="builder-head"><span class="bn" id="builderName">Fufu</span><span class="bp" id="builderPrice">GHS 25</span></div>
       <div class="builder-field">
-        <label for="builderSoup">Soup / Stew:</label>
-        <select id="builderSoup"></select>
+        <label>Soup / Stew (free — pick one per plate):</label>
+        <div id="builderSoups"></div>
       </div>
       <div class="builder-field">
-        <label for="builderProtein">Protein:</label>
-        <select id="builderProtein"></select>
+        <label>Proteins (add as many as you like):</label>
+        <div id="builderProteins"></div>
       </div>
       <div class="builder-field">
-        <label>Quantity:</label>
+        <label id="builderQtyLabel">Quantity:</label>
         <div class="builder-qty">
           <button type="button" id="builderQtyDec">−</button>
-          <span id="builderQty">1</span>
+          <input type="number" id="builderQty" min="1" max="200" value="1" inputmode="numeric">
           <button type="button" id="builderQtyInc">+</button>
         </div>
       </div>
+      <div class="builder-note" id="builderNote"></div>
       <div class="builder-total"><span>Total</span><span id="builderTotal">GHS 0</span></div>
     </div>
     <div class="modal-foot">
@@ -401,6 +436,15 @@
       <button class="btn btn-ghost tall" data-close="modalFinish">Cancel</button>
       <button class="btn btn-danger tall" id="finishConfirmBtn">Mark Finished</button>
     </div>
+  </div>
+</div>
+
+<!-- Customer order detail / processing -->
+<div class="overlay" id="modalOrder">
+  <div class="modal">
+    <div class="modal-head"><h3 id="ordModalTitle">Order</h3><button class="modal-close" data-close="modalOrder">&times;</button></div>
+    <div class="modal-body" id="ordModalBody"></div>
+    <div class="modal-foot" id="ordModalFoot"></div>
   </div>
 </div>
 
@@ -458,6 +502,8 @@
   const markItemFinished = (id) => apiCall("PATCH", "/seller/menu/" + id + "/finish");
   const createSale       = (payload) => apiCall("POST", "/sales", payload);
   const getMyHistory     = () => apiCall("GET", "/sales/my");
+  const getOrders        = () => apiCall("GET", "/seller/orders");
+  const setOrderStatus   = (id, status, paymentMethod) => apiCall("PATCH", "/seller/orders/" + encodeURIComponent(id) + "/status", { status, paymentMethod });
 
   function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function gh(n){ n = Number(n || 0); return "GHS " + (Number.isInteger(n) ? n : n.toFixed(2)); }
@@ -480,6 +526,8 @@
       document.getElementById("sellerIdLine").textContent = session.id;
       document.getElementById("connNote").style.display = "none";
       loadMenu();
+      loadCustOrders(true);
+      startPolling();
     }catch(err){
       window.location.href = "login.html";
     }
@@ -492,7 +540,7 @@
   function switchTab(key){
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === key));
     Object.entries(views).forEach(([k,v]) => v.classList.toggle("active", k === key));
-    if(key === "dashboard") loadMenu();
+    if(key === "dashboard"){ loadMenu(); loadCustOrders(true); }
     if(key === "history") loadHistory();
   }
   document.getElementById("tabbar").addEventListener("click", (e) => {
@@ -528,17 +576,22 @@
   let cartKeySeq = 1;
   let selectedPayment = null;
 
-  async function loadMenu(){
+  let lastMenuJson = "";
+  async function loadMenu(quiet){
     try{
       menuItems = await getMenu();
     }catch(err){
+      if(quiet) return; // background refresh: stay quiet, try again next time
       menuItems = [];
       toast(err.message, "error");
     }
+    const json = JSON.stringify(menuItems);
+    if(quiet && json === lastMenuJson) return; // nothing changed
+    lastMenuJson = json;
     // Drop any order lines that use something that is no longer sellable.
     const sellable = new Set(menuItems.filter(i => i.status === "available").map(i => i.id));
     const before = cart.length;
-    cart = cart.filter(c => sellable.has(c.foodId) && (!c.soupId || sellable.has(c.soupId)) && (!c.proteinId || sellable.has(c.proteinId)));
+    cart = cart.filter(c => sellable.has(c.foodId) && (c.soups || []).every(p => sellable.has(p.id)) && (c.proteins || []).every(p => sellable.has(p.id)));
     if(cart.length !== before) toast("Some items in your order just ran out and were removed.", "error");
     renderMenu();
     renderOrder();
@@ -551,7 +604,7 @@
 
   function cardHtml(it, opts){
     const finished = it.status === "finished";
-    const price = it.type === "food" ? `<div class="pr">${gh(it.price)}</div>`
+    const price = it.type === "food" ? `<div class="pr">${it.pricingType === "unit" ? gh(it.price) + " / " + esc(it.unitName || "unit") : gh(it.price)}</div>`
                 : it.type === "protein" ? `<div class="pr">+ ${gh(it.price)}</div>` : "";
     const inner = `<div class="nm">${esc(it.name)}</div>${price}`;
     const main = (opts.selectable && !finished)
@@ -621,48 +674,121 @@
   let builderFoodId = null;
   let builderQty = 1;
 
-  function fillSelect(select, items, placeholder, withPrice){
+  function fillSelect(select, items, placeholder){
     select.innerHTML = `<option value="">${placeholder}</option>` +
-      items.map(it => `<option value="${it.id}">${esc(it.name)}${withPrice ? " + " + gh(it.price) : ""}</option>`).join("");
+      items.map(it => `<option value="${it.id}">${esc(it.name)}</option>`).join("");
   }
   function availableOfType(type){ return menuItems.filter(i => i.type === type && i.status === "available"); }
+  const isUnit = (o) => o && o.pricingType === "unit";
+  function unitWord(name, n){ return n === 1 ? name : name + "s"; }
+
+  // Same formula the server uses (the server's answer is the official one):
+  //   total = food price x food quantity + sum(protein price x protein quantity)
+  // Proteins are counted on their own, so 2 Fufu can share 1 Goat.
+  function proteinsSum(c){ return (c.proteins || []).reduce((s, p) => s + p.price * p.qty, 0); }
+  function lineTotal(c){ return c.foodPrice * c.qty + proteinsSum(c); }
+
+  let builderSoup = {}; // soupId -> quantity
+  const soupCount = () => Object.values(builderSoup).reduce((a, b) => a + b, 0);
+  function drawSoupRows(){
+    const list = availableOfType("soup");
+    document.getElementById("builderSoups").innerHTML = list.length ? list.map(x => {
+      const q = builderSoup[x.id] || 0;
+      return `<div class="prot-row ${q ? "on" : ""}" data-sid="${x.id}"><div><div class="pn">${esc(x.name)}</div><div class="pp">no extra charge</div></div>
+        <div class="pq"><button type="button" data-sa="dec" aria-label="Less">−</button><span>${q}</span><button type="button" data-sa="inc" aria-label="More">+</button></div></div>`;
+    }).join("") : `<div style="font-size:13px;color:var(--eg-muted);">No soups or stews available today.</div>`;
+  }
+  document.getElementById("builderSoups").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sa]");
+    if(!b) return;
+    const id = b.closest(".prot-row").dataset.sid;
+    const food = menuItems.find(i => i.id === builderFoodId);
+    const q = (builderSoup[id] || 0) + (b.dataset.sa === "inc" ? 1 : -1);
+    if(q > (builderSoup[id] || 0) && !isUnit(food) && soupCount() >= builderQty){ toast("Each plate gets one soup. Raise the quantity first for more plates.", "error"); return; }
+    if(q <= 0) delete builderSoup[id]; else builderSoup[id] = Math.min(50, q);
+    drawSoupRows();
+  });
+  function builderSoupList(){
+    return Object.entries(builderSoup).map(([id, q]) => { const it = menuItems.find(i => i.id === id); return it ? { id, name: it.name, qty: q } : null; }).filter(Boolean);
+  }
+  // If the quantity is lowered below the number of soups chosen, trim the soups to fit.
+  function trimSoups(food){
+    if(isUnit(food)) return;
+    let extra = soupCount() - builderQty;
+    for(const id of Object.keys(builderSoup).reverse()){
+      if(extra <= 0) break;
+      const cut = Math.min(extra, builderSoup[id]);
+      builderSoup[id] -= cut; extra -= cut;
+      if(builderSoup[id] <= 0) delete builderSoup[id];
+    }
+  }
+
+  let builderProt = {}; // proteinId -> quantity
+  function drawProteinRows(){
+    const list = availableOfType("protein");
+    document.getElementById("builderProteins").innerHTML = list.length ? list.map(p => {
+      const q = builderProt[p.id] || 0;
+      return `<div class="prot-row ${q ? "on" : ""}" data-pid="${p.id}"><div><div class="pn">${esc(p.name)}</div><div class="pp">+ ${gh(p.price)} each</div></div>
+        <div class="pq"><button type="button" data-pa="dec" aria-label="Less">−</button><span>${q}</span><button type="button" data-pa="inc" aria-label="More">+</button></div></div>`;
+    }).join("") : `<div style="font-size:13px;color:var(--eg-muted);">No proteins available today.</div>`;
+  }
+  document.getElementById("builderProteins").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pa]");
+    if(!b) return;
+    const id = b.closest(".prot-row").dataset.pid;
+    const q = (builderProt[id] || 0) + (b.dataset.pa === "inc" ? 1 : -1);
+    if(q <= 0) delete builderProt[id]; else builderProt[id] = Math.min(50, q);
+    drawProteinRows(); updateBuilderTotal();
+  });
+  function builderProteinList(){
+    return Object.entries(builderProt).map(([id, q]) => { const it = menuItems.find(i => i.id === id); return it ? { id, name: it.name, price: Number(it.price), qty: q } : null; }).filter(Boolean);
+  }
+
+  function setBuilderQty(n){
+    builderQty = Math.min(200, Math.max(1, Math.floor(Number(n) || 1)));
+    trimSoups(menuItems.find(i => i.id === builderFoodId)); drawSoupRows();
+    document.getElementById("builderQty").value = builderQty;
+    updateBuilderTotal();
+  }
 
   function openBuilder(foodId){
     const food = menuItems.find(i => i.id === foodId);
     if(!food || food.status !== "available") return;
     builderFoodId = foodId;
-    builderQty = 1;
     document.getElementById("builderName").textContent = food.name;
-    document.getElementById("builderPrice").textContent = gh(food.price);
-    fillSelect(document.getElementById("builderSoup"), availableOfType("soup"), "Select Soup/Stew", false);
-    fillSelect(document.getElementById("builderProtein"), availableOfType("protein"), "Select Protein", true);
-    document.getElementById("builderQty").textContent = builderQty;
-    updateBuilderTotal();
+    document.getElementById("builderPrice").textContent = isUnit(food) ? gh(food.price) + " / " + (food.unitName || "unit") : gh(food.price);
+    builderSoup = {}; drawSoupRows();
+    builderProt = {}; drawProteinRows();
+    document.getElementById("builderQtyLabel").textContent = isUnit(food) ? "How many " + unitWord(food.unitName || "unit", 2) + "?" : "Quantity:";
+    document.getElementById("builderNote").textContent = "Proteins are counted separately from the food — e.g. 2 " + (isUnit(food) ? unitWord(food.unitName || "unit", 2) : "plates") + " can share 1 protein.";
+    setBuilderQty(1);
     openModal("modalBuilder");
   }
   function updateBuilderTotal(){
     const food = menuItems.find(i => i.id === builderFoodId);
     if(!food) return;
-    const pid = document.getElementById("builderProtein").value;
-    const protein = pid ? menuItems.find(i => i.id === pid) : null;
-    const unit = Number(food.price) + (protein ? Number(protein.price) : 0); // soup/stew adds GHS 0
-    document.getElementById("builderTotal").textContent = gh(unit * builderQty);
+    const total = lineTotal({ foodPrice: Number(food.price), proteins: builderProteinList(), qty: builderQty }); // soup/stew adds GHS 0
+    document.getElementById("builderTotal").textContent = gh(total);
   }
-  document.getElementById("builderProtein").addEventListener("change", updateBuilderTotal);
-  document.getElementById("builderQtyInc").addEventListener("click", () => { builderQty += 1; document.getElementById("builderQty").textContent = builderQty; updateBuilderTotal(); });
-  document.getElementById("builderQtyDec").addEventListener("click", () => { builderQty = Math.max(1, builderQty - 1); document.getElementById("builderQty").textContent = builderQty; updateBuilderTotal(); });
+  document.getElementById("builderQtyInc").addEventListener("click", () => setBuilderQty(builderQty + 1));
+  document.getElementById("builderQtyDec").addEventListener("click", () => setBuilderQty(builderQty - 1));
+  document.getElementById("builderQty").addEventListener("input", (e) => {
+    builderQty = Math.min(200, Math.max(1, Math.floor(Number(e.target.value) || 1)));
+    trimSoups(menuItems.find(i => i.id === builderFoodId)); drawSoupRows();
+    updateBuilderTotal();
+  });
+  // On blur only tidy the number — never re-draw the lists, or the tap that caused the blur is lost.
+  document.getElementById("builderQty").addEventListener("blur", () => { document.getElementById("builderQty").value = builderQty; });
 
   document.getElementById("builderAddBtn").addEventListener("click", () => {
     const food = menuItems.find(i => i.id === builderFoodId);
     if(!food) return;
-    const soup = menuItems.find(i => i.id === document.getElementById("builderSoup").value) || null;
-    const protein = menuItems.find(i => i.id === document.getElementById("builderProtein").value) || null;
     cart.push({
       key: "c" + (cartKeySeq++),
       foodId: food.id, foodName: food.name, foodPrice: Number(food.price),
-      soupId: soup ? soup.id : null, soupName: soup ? soup.name : null,
-      proteinId: protein ? protein.id : null, proteinName: protein ? protein.name : null,
-      proteinPrice: protein ? Number(protein.price) : 0,
+      pricingType: food.pricingType === "unit" ? "unit" : "fixed", unitName: food.unitName || null,
+      soups: builderSoupList(),
+      proteins: builderProteinList(),
       qty: builderQty
     });
     closeModal("modalBuilder");
@@ -672,8 +798,7 @@
   /* ================================================================
      Current Order
   ================================================================ */
-  function unitPrice(c){ return c.foodPrice + (c.proteinPrice || 0); }
-  function cartTotal(){ return cart.reduce((sum, c) => sum + unitPrice(c) * c.qty, 0); }
+  function cartTotal(){ return cart.reduce((sum, c) => sum + lineTotal(c), 0); }
 
   function renderOrder(){
     const lines = document.getElementById("orderLines");
@@ -684,10 +809,10 @@
       return;
     }
     lines.innerHTML = cart.map(c => `<div class="co-line" data-key="${c.key}">
-      <div class="co-top"><span>${esc(c.foodName)} × ${c.qty}</span></div>
-      ${c.soupName ? `<div class="co-sub">${esc(c.soupName)}</div>` : ""}
-      ${c.proteinName ? `<div class="co-sub">${esc(c.proteinName)}</div>` : ""}
-      <div class="co-price">${gh(unitPrice(c) * c.qty)}</div>
+      <div class="co-top"><span>${esc(c.foodName)} × ${c.pricingType === "unit" ? c.qty + " " + esc(unitWord(c.unitName || "unit", c.qty)) : c.qty}</span></div>
+      ${(c.soups || []).map(x => `<div class="co-sub">${esc(x.name)} × ${x.qty}</div>`).join("")}
+      ${(c.proteins || []).map(p => `<div class="co-sub">${esc(p.name)} × ${p.qty}</div>`).join("")}
+      <div class="co-price">${gh(lineTotal(c))}</div>
       <div class="co-ctl">
         <button class="q dec" aria-label="Less">−</button><span style="font-weight:700;min-width:18px;text-align:center;">${c.qty}</span><button class="q inc" aria-label="More">+</button>
         <button class="rm">Remove</button>
@@ -734,7 +859,7 @@
     btn.classList.add("loading"); btn.disabled = true;
     try{
       const tx = await createSale({
-        items: cart.map(c => ({ foodId: c.foodId, soupId: c.soupId, proteinId: c.proteinId, quantity: c.qty })),
+        items: cart.map(c => ({ foodId: c.foodId, soups: (c.soups || []).map(x => ({ soupId: x.id, quantity: x.qty })), proteins: (c.proteins || []).map(p => ({ proteinId: p.id, quantity: p.qty })), quantity: c.qty })),
         paymentMethod: selectedPayment
       });
       showSuccess(tx);
@@ -762,6 +887,142 @@
     renderOrder();
     loadMenu();
   });
+
+  /* ================================================================
+     Customer (QR) orders. Everything comes from the backend; the list is
+     refreshed every few seconds so a new table order appears on its own,
+     and so do items another seller (or the Admin) just changed.
+  ================================================================ */
+  let custOrders = [];
+  let knownOrderIds = null; // null until the first load, so we don't "announce" old orders
+  const STATUS = {
+    new:       { label: "NEW",       cls: "badge-warn" },
+    preparing: { label: "Preparing", cls: "badge-info" },
+    ready:     { label: "Ready",     cls: "badge-success" }
+  };
+
+  function orderLinesHtml(o){
+    return (o.items || []).map(i => {
+      const qty = i.pricingType === "unit" ? `${i.quantity} ${esc(unitWord(i.unitName || "unit", i.quantity))}` : `× ${i.quantity}`;
+      return `<div><b>${esc(i.foodName)}</b> ${qty}</div>` +
+        (i.soups ? i.soups.map(x => `<div class="sub">${esc(x.name)} × ${x.quantity}</div>`).join("") : (i.soupName ? `<div class="sub">${esc(i.soupName)}</div>` : "")) +
+        (i.proteins ? i.proteins.map(p => `<div class="sub">${esc(p.name)} × ${p.quantity}</div>`).join("") : (i.proteinName ? `<div class="sub">${esc(i.proteinName)}</div>` : ""));
+    }).join("");
+  }
+
+  async function loadCustOrders(quiet){
+    let list;
+    try{ list = await getOrders(); }
+    catch(err){
+      if(err.status === 401 || err.status === 403){ window.location.href = "login.html"; }
+      return; // background refresh: keep what's on screen
+    }
+    const fresh = knownOrderIds ? list.filter(o => o.status === "new" && !knownOrderIds.has(o.orderId)) : [];
+    knownOrderIds = new Set([...(knownOrderIds || []), ...list.map(o => o.orderId)]);
+    custOrders = list;
+    renderCustOrders();
+    if(fresh.length) toast(fresh.length === 1 ? "New order from " + fresh[0].tableName + "!" : fresh.length + " new customer orders!", "success");
+    // keep an open order window in step with the server
+    if(openOrderId && document.getElementById("modalOrder").classList.contains("show")){
+      const o = custOrders.find(x => x.orderId === openOrderId);
+      if(o) renderOrderModal(o); else closeModal("modalOrder");
+    }
+  }
+
+  function renderCustOrders(){
+    const wrap = document.getElementById("custOrdersWrap");
+    if(!custOrders.length){
+      wrap.innerHTML = `<div class="none">No customer orders right now.</div>`;
+      return;
+    }
+    wrap.innerHTML = `<div class="oc-grid">${custOrders.map(o => `
+      <div class="oc ${o.status === "new" ? "is-new" : ""}">
+        <div class="oc-top"><span class="oc-table">${esc(o.tableName)}</span><span class="badge ${STATUS[o.status].cls}">${STATUS[o.status].label}</span></div>
+        <div class="oc-id">Order ${esc(o.orderId)} · ${new Date(o.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}${o.handledByName ? " · " + esc(o.handledByName) : ""}</div>
+        <div class="oc-items">${orderLinesHtml(o)}</div>
+        <div class="oc-foot"><span class="oc-total">${gh(o.total)}</span><button type="button" class="btn btn-primary" data-view-order="${esc(o.orderId)}">View Order</button></div>
+      </div>`).join("")}</div>`;
+  }
+  document.getElementById("custOrdersWrap").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-view-order]");
+    if(!b) return;
+    const o = custOrders.find(x => x.orderId === b.dataset.viewOrder);
+    if(o){ openOrderId = o.orderId; orderPay = null; renderOrderModal(o); openModal("modalOrder"); }
+  });
+
+  let openOrderId = null;
+  let orderPay = null;
+  function renderOrderModal(o){
+    document.getElementById("ordModalTitle").textContent = o.tableName + " — " + o.orderId;
+    const body = document.getElementById("ordModalBody");
+    body.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span class="badge ${STATUS[o.status].cls}">${STATUS[o.status].label}</span>
+        <span style="font-size:12.5px;color:var(--eg-muted);">${new Date(o.createdAt).toLocaleString()}</span>
+      </div>
+      <div class="oc-items" style="margin-bottom:12px;">${orderLinesHtml(o)}</div>
+      <div class="builder-total"><span>Total</span><span>${gh(o.total)}</span></div>
+      <div style="font-size:12.5px;color:var(--eg-muted);margin-top:8px;">Payment: not paid yet — collect it from the customer.${o.handledByName ? " Handled by " + esc(o.handledByName) + "." : ""}</div>
+      ${o.status === "ready" ? `
+        <div class="co-pay-title" style="margin-top:16px;">Payment received</div>
+        <div class="opay-methods">
+          <button type="button" class="opay ${orderPay === "cash" ? "selected" : ""}" data-opay="cash">💵 Cash</button>
+          <button type="button" class="opay ${orderPay === "momo" ? "selected" : ""}" data-opay="momo">📱 Mobile Money</button>
+        </div>
+        ${orderPay === "momo" ? `<div class="hint-box" style="display:block;">Only complete the order after you have confirmed the Mobile Money payment has been received.</div>` : ""}` : ""}
+      <div class="err-box" id="ordError"></div>`;
+    const foot = document.getElementById("ordModalFoot");
+    const next = { new: ["preparing", "Start Preparing"], preparing: ["ready", "Mark Ready"], ready: ["completed", "Complete & Record Sale"] }[o.status];
+    foot.innerHTML = `<button type="button" class="btn btn-ghost tall" id="ordCancelBtn">Cancel Order</button>
+      <button type="button" class="btn btn-primary tall" id="ordNextBtn" data-next="${next[0]}">${next[1]}</button>`;
+  }
+  document.getElementById("ordModalBody").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-opay]");
+    if(!b) return;
+    orderPay = b.dataset.opay;
+    const o = custOrders.find(x => x.orderId === openOrderId);
+    if(o) renderOrderModal(o);
+  });
+  async function moveOrder(status){
+    const box = document.getElementById("ordError");
+    if(box) box.style.display = "none";
+    if(status === "completed" && !orderPay){
+      if(box){ box.textContent = "Choose Cash or Mobile Money first."; box.style.display = "block"; }
+      return;
+    }
+    const buttons = document.querySelectorAll("#ordModalFoot button");
+    buttons.forEach(b => b.disabled = true);
+    try{
+      await setOrderStatus(openOrderId, status, status === "completed" ? orderPay : undefined);
+      if(status === "completed"){ toast("Order completed and sale recorded.", "success"); closeModal("modalOrder"); }
+      else if(status === "cancelled"){ toast("Order cancelled.", "success"); closeModal("modalOrder"); }
+      else toast(status === "preparing" ? "Order is being prepared." : "Order marked ready.", "success");
+      orderPay = null;
+      await loadCustOrders(true);
+    }catch(err){
+      const b2 = document.getElementById("ordError");
+      if(b2){ b2.textContent = err.message; b2.style.display = "block"; }
+      await loadCustOrders(true); // someone else may have moved it already
+    }finally{
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+  document.getElementById("ordModalFoot").addEventListener("click", (e) => {
+    if(e.target.closest("#ordNextBtn")) return moveOrder(e.target.closest("#ordNextBtn").dataset.next);
+    if(e.target.closest("#ordCancelBtn") && window.confirm("Cancel this customer order?")) return moveOrder("cancelled");
+  });
+
+  // Background refresh while the Today's Menu tab is open and the phone/tab is in use.
+  let pollTimer = null;
+  function startPolling(){
+    if(pollTimer) return;
+    pollTimer = setInterval(() => {
+      if(document.hidden || !views.dashboard.classList.contains("active")) return;
+      loadCustOrders(true);
+      if(!document.getElementById("modalBuilder").classList.contains("show")) loadMenu(true);
+    }, 8000);
+    document.addEventListener("visibilitychange", () => { if(!document.hidden && views.dashboard.classList.contains("active")){ loadCustOrders(true); loadMenu(true); } });
+  }
 
   /* ================================================================
      My Sales (own sales only — enforced server-side by /sales/my)
@@ -799,7 +1060,7 @@
       <tbody>${list.map(t => `<tr>
         <td>${new Date(t.createdAt).toLocaleString()}</td>
         <td>${esc(t.transactionId)}</td>
-        <td>${(t.items||[]).map(i => `${esc(i.name)} ×${i.quantity}`).join(", ")}</td>
+        <td>${t.tableName ? `<span class="badge badge-info">${esc(t.tableName)}</span> ` : ""}${(t.items||[]).map(i => `${esc(i.name)} ×${i.quantity}${i.pricingType === "unit" ? " " + esc(i.unitName || "") : ""}`).join(", ")}</td>
         <td>${money(t.total)}</td>
         <td>${payLabel(t.paymentMethod)}</td>
         <td><span class="badge ${t.status === 'completed' ? 'badge-success' : 'badge-muted'}">${esc(t.status)}</span></td>

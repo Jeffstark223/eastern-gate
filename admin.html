@@ -403,6 +403,32 @@
     .field-row{grid-template-columns:1fr;}
     .menu-toggle{display:flex;}
   }
+
+  /* ---- customer orders, tables & QR, storage warning, per-unit pricing ---- */
+  .storage-warn{display:none;background:var(--eg-error-bg);border:1.5px solid var(--eg-error);color:#7A2118;border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:18px;font-size:13.5px;line-height:1.5;}
+  .storage-warn.show{display:block;}
+  .badge-info{background:#E6EEF8;color:#24507E;}
+  .co-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #F1EDE2;font-size:14px;}
+  .co-row:last-child{border-bottom:none;}
+  .co-row .who{font-weight:800;}
+  .co-row .what{color:var(--eg-muted);font-size:12.5px;margin-top:2px;}
+  .co-counts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+  .co-counts div{background:#FBF8F2;border:1px solid var(--eg-border);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+  .co-counts b{display:block;font-size:24px;font-family:'Fraunces',serif;}
+  .co-counts span{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--eg-muted);}
+  .tbl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;}
+  .tbl-card{border:1.5px solid var(--eg-border);border-radius:var(--radius);background:#fff;padding:14px;text-align:center;}
+  .tbl-card.inactive{opacity:.55;}
+  .tbl-card h3{font-size:18px;margin-bottom:8px;}
+  .tbl-card img{width:100%;max-width:170px;height:auto;display:block;margin:0 auto 8px;}
+  .tbl-card .url{font-size:10.5px;color:var(--eg-muted);word-break:break-all;margin-bottom:10px;}
+  .tbl-card .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+  .add-tables{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .add-tables input{width:80px;padding:9px 10px;border:1.5px solid var(--eg-border);border-radius:8px;font-size:14px;}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .seg button{padding:12px;border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);background:#fff;font-size:14px;font-weight:700;cursor:pointer;color:var(--eg-text);font-family:inherit;}
+  .seg button.on{border-color:var(--eg-green);background:#F1F5EF;color:var(--eg-green);}
+  .seg button small{display:block;font-weight:500;color:var(--eg-muted);font-size:11.5px;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -423,6 +449,10 @@
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l2.4 12.4A2 2 0 0 0 9.36 17H18a2 2 0 0 0 2-1.6L21.6 7H6"/><circle cx="9.5" cy="20.5" r="1"/><circle cx="17.5" cy="20.5" r="1"/></svg>
         Sales
       </button>
+      <button class="nav-item" data-view="orders">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Customer Orders
+      </button>
       <button class="nav-item" data-view="sellers">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Sellers
@@ -430,6 +460,10 @@
       <button class="nav-item" data-view="menu">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5a2 2 0 0 1 2-2h8.5L20 7.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 12h8M8 16h8M8 8h4"/></svg>
         Menu
+      </button>
+      <button class="nav-item" data-view="tables">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/></svg>
+        Tables &amp; QR
       </button>
       <button class="nav-item" data-view="reports">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
@@ -466,6 +500,7 @@
 
       <!-- ============ DASHBOARD ============ -->
       <section class="view active" id="view-dashboard">
+        <div class="storage-warn" id="storageWarn"><b>Your data is not being saved permanently.</b> <span id="storageWarnText"></span> Accounts, menu and sales will be lost the next time the server restarts or is redeployed. See <b>DEPLOY-RENDER.md</b> to attach a Persistent Disk.</div>
         <h2 class="sec-title">Today's Overview</h2>
         <div class="grid-stats">
           <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="statSales">—</div></div>
@@ -474,6 +509,14 @@
           <div class="stat-card"><div class="label">Mobile Money</div><div class="value" id="statMomo">—</div></div>
         </div>
         <div class="today-note" id="noSalesNote" style="display:none;">No sales yet today.</div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2 style="font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">Customer Orders</h2>
+            <button class="btn btn-ghost btn-sm" id="goToOrdersBtn">View all</button>
+          </div>
+          <div class="panel-body" id="customerOrdersBody"><div class="dm-none">Loading…</div></div>
+        </div>
 
         <div class="panel">
           <div class="panel-head">
@@ -568,6 +611,43 @@
           <div class="panel-head"><h2 style="font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:800;">+ Add New Menu Item</h2></div>
           <div class="panel-body">
             <button class="btn btn-primary btn-lg" id="addMenuItemBtn">+ Add New Menu Item</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CUSTOMER ORDERS ============ -->
+      <section class="view" id="view-orders">
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2>Customer Orders</h2><div class="sub">Orders placed by customers from the table QR codes.</div></div>
+          </div>
+          <div class="filters">
+            <select id="ordFilter">
+              <option value="active">Open orders (new / preparing / ready)</option>
+              <option value="today">All of today</option>
+              <option value="all">Everything</option>
+            </select>
+          </div>
+          <div id="ordersWrap"><div class="empty-state"><p>Loading…</p></div></div>
+        </div>
+      </section>
+
+      <!-- ============ TABLES & QR ============ -->
+      <section class="view" id="view-tables">
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2>Tables &amp; QR codes</h2><div class="sub">Each table has its own QR code. Customers scan it and the order is tagged with that table automatically.</div></div>
+            <button class="btn btn-ghost btn-sm" id="printAllQrBtn">Print all</button>
+          </div>
+          <div class="panel-body">
+            <div class="add-tables" style="margin-bottom:14px;">
+              <label style="font-size:13px;font-weight:700;">Add</label>
+              <input type="number" id="addTablesCount" min="1" max="50" value="1">
+              <span style="font-size:13px;">table(s)</span>
+              <button class="btn btn-primary btn-sm" id="addTablesBtn">Add tables</button>
+            </div>
+            <div class="hint" id="qrBaseNote" style="font-size:12.5px;color:var(--eg-muted);margin-bottom:14px;"></div>
+            <div id="tablesWrap"><div class="empty-state"><p>Loading…</p></div></div>
           </div>
         </div>
       </section>
@@ -727,10 +807,22 @@
           <input type="text" id="mName" placeholder="">
           <div class="field-err">Enter the item's name.</div>
         </div>
+        <div class="field" id="f-m-ptype" style="display:none;">
+          <label>Pricing type:</label>
+          <div class="seg" id="mPtypeSeg">
+            <button type="button" data-ptype="fixed" class="on">Fixed Price<small>One price per plate (e.g. Fufu GHS 25)</small></button>
+            <button type="button" data-ptype="unit">Price Per Unit<small>Sold by quantity (e.g. GHS 5 per ball)</small></button>
+          </div>
+        </div>
         <div class="field" id="f-m-price">
           <label for="mPrice" id="mPriceLabel">Price:</label>
           <input type="number" id="mPrice" min="0" step="0.5" placeholder="">
           <div class="field-err">Enter a valid price (0 or more).</div>
+        </div>
+        <div class="field" id="f-m-unit" style="display:none;">
+          <label for="mUnit">Unit name:</label>
+          <input type="text" id="mUnit" maxlength="20" placeholder="e.g. ball">
+          <div class="field-err">Enter the unit name (for example: ball).</div>
         </div>
       </form>
     </div>
@@ -738,6 +830,21 @@
       <button class="btn btn-ghost" id="menuBackBtn" style="display:none;margin-right:auto;">← Back</button>
       <button class="btn btn-ghost" data-close="modalMenuItem">Cancel</button>
       <button class="btn btn-primary" id="menuSaveBtn" style="display:none;"><span class="spinner"></span><span class="btn-label">Add Food</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: Customer order detail ================= -->
+<div class="overlay" id="modalOrder">
+  <div class="modal">
+    <div class="modal-head"><h3>Customer order</h3><button class="modal-close" data-close="modalOrder">&times;</button></div>
+    <div class="modal-body">
+      <div class="modal-banner error" id="orderModalBanner"><div class="dot"></div><div id="orderModalBannerText"></div></div>
+      <div id="modalOrderBody"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between;">
+      <button class="btn btn-danger-ghost" id="cancelOrderBtn"><span class="spinner"></span><span class="btn-label">Cancel order</span></button>
+      <button class="btn btn-ghost" data-close="modalOrder">Close</button>
     </div>
   </div>
 </div>
@@ -793,6 +900,11 @@
   const createMenuItem    = (payload) => apiCall("POST", "/admin/menu", payload);
   const updateMenuItem    = (id, payload) => apiCall("PATCH", "/admin/menu/" + id, payload);
   const restoreMenuItem   = (id) => apiCall("POST", "/admin/menu/" + id + "/restore");
+  const getTables         = () => apiCall("GET", "/admin/tables");
+  const addTables         = (count) => apiCall("POST", "/admin/tables", { count });
+  const setTableActive    = (id, active) => apiCall("PATCH", "/admin/tables/" + id, { active });
+  const getOrders         = (q) => apiCall("GET", "/admin/orders" + (q ? "?" + q : ""));
+  const cancelOrder       = (id) => apiCall("POST", "/admin/orders/" + encodeURIComponent(id) + "/cancel");
   const getEndOfDayReport = (date) => apiCall("GET", "/admin/reports/end-of-day?date=" + encodeURIComponent(date));
 
   /* ================================================================
@@ -811,23 +923,40 @@
       document.getElementById("adminInitial").textContent = (session.fullName || "A").trim().charAt(0).toUpperCase();
       setConn(true);
       loadViewData("dashboard");
+      checkStorage();
       loadSellers(); // warms the seller filter dropdown + sellers cache early
     }catch(err){
       window.location.href = "login.html";
     }
   })();
 
+  // Warn loudly if data.json sits on a filesystem that is wiped on redeploy.
+  async function checkStorage(){
+    try{
+      const h = await apiCall("GET", "/health");
+      const warn = document.getElementById("storageWarn");
+      if(h && h.persistent === false){
+        document.getElementById("storageWarnText").textContent = h.reason || "";
+        warn.classList.add("show");
+      }else{
+        warn.classList.remove("show");
+      }
+    }catch(e){ /* health is advisory only */ }
+  }
+
   /* ================================================================
      Shell: navigation, connection pill, logout
   ================================================================ */
   const views = {
     dashboard: document.getElementById("view-dashboard"),
+    orders: document.getElementById("view-orders"),
+    tables: document.getElementById("view-tables"),
     sales: document.getElementById("view-sales"),
     sellers: document.getElementById("view-sellers"),
     menu: document.getElementById("view-menu"),
     reports: document.getElementById("view-reports")
   };
-  const titles = { dashboard:"Dashboard", sales:"Sales", sellers:"Sellers", menu:"Menu", reports:"Reports & end of day" };
+  const titles = { orders:"Customer Orders", tables:"Tables & QR", dashboard:"Dashboard", sales:"Sales", sellers:"Sellers", menu:"Menu", reports:"Reports & end of day" };
 
   function goToView(key){
     document.querySelectorAll(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.view === key));
@@ -844,6 +973,7 @@
     goToView(btn.dataset.view);
   });
   document.getElementById("goToMenuBtn").addEventListener("click", () => goToView("menu"));
+  document.getElementById("goToOrdersBtn").addEventListener("click", () => goToView("orders"));
 
   /* ---- Mobile sidebar open/close ---- */
   const sidebarEl = document.getElementById("sidebar");
@@ -939,6 +1069,19 @@
       });
     }
 
+    /* ---- Customer orders (real backend counts; empty state if none) ---- */
+    const coBody = document.getElementById("customerOrdersBody");
+    const co = d ? d.customerOrders : null;
+    if(!co || co.total === 0){
+      coBody.innerHTML = `<div class="dm-none">No customer orders yet.</div>`;
+    }else{
+      coBody.innerHTML = `<div class="co-counts">
+        <div><b>${co.new}</b><span>New</span></div>
+        <div><b>${co.preparing}</b><span>Preparing</span></div>
+        <div><b>${co.ready}</b><span>Ready</span></div>
+        <div><b>${co.completedToday}</b><span>Done today</span></div></div>`;
+    }
+
     /* ---- Seller activity ---- */
     const sellerBody = document.getElementById("salesBySellerBody");
     if(!d || !d.salesBySeller || d.salesBySeller.length === 0){
@@ -1010,7 +1153,7 @@
     }
     const rows = list.map(t => `
       <tr class="clickable" data-id="${t.transactionId}">
-        <td>${t.transactionId}</td><td>${formatTime(t.createdAt)}</td><td>${t.sellerName}</td>
+        <td>${esc(t.transactionId)}</td><td>${formatTime(t.createdAt)}</td><td>${esc(t.sellerName)}${t.tableName ? ` <span class="badge badge-info">${esc(t.tableName)}</span>` : ""}</td>
         <td>${(t.items||[]).map(i=>`${i.name} ×${i.quantity}`).join(", ")}</td>
         <td>${money(t.total)}</td><td>${t.paymentMethod === "cash" ? "Cash" : "Mobile Money"}</td>
         <td><span class="badge ${t.status === 'completed' ? 'badge-success' : 'badge-muted'}">${t.status}</span></td>
@@ -1034,7 +1177,8 @@
     document.getElementById("modalTxBody").innerHTML = `
       <div class="detail-row"><span class="k">Transaction ID</span><span class="v">${t.transactionId}</span></div>
       <div class="detail-row"><span class="k">Date/Time</span><span class="v">${formatTime(t.createdAt)}</span></div>
-      <div class="detail-row"><span class="k">Seller</span><span class="v">${t.sellerName}</span></div>
+      <div class="detail-row"><span class="k">Seller</span><span class="v">${esc(t.sellerName)}</span></div>
+      ${t.tableName ? `<div class="detail-row"><span class="k">Table / order</span><span class="v">${esc(t.tableName)} · ${esc(t.orderId)}</span></div>` : ""}
       <div class="detail-row"><span class="k">Items</span><span class="v" style="text-align:left;max-width:280px;">${itemsHtml}</span></div>
       <div class="detail-row"><span class="k">Total</span><span class="v">${money(t.total)}</span></div>
       <div class="detail-row"><span class="k">Payment method</span><span class="v">${t.paymentMethod === "cash" ? "Cash" : "Mobile Money"}</span></div>
@@ -1253,7 +1397,9 @@
   function menuRowHtml(it){
     // Soups/stews never show a price. Foods show their price, proteins "+ price".
     let priceHtml = "";
-    if(it.type === "food") priceHtml = `<div class="mprice">${gh(it.price)}</div>`;
+    if(it.type === "food") priceHtml = it.pricingType === "unit"
+      ? `<div class="mprice">${gh(it.price)} / ${esc(it.unitName || "unit")}</div>`
+      : `<div class="mprice">${gh(it.price)}</div>`;
     if(it.type === "protein") priceHtml = `<div class="mprice">+ ${gh(it.price)}</div>`;
     const finished = it.status === "finished";
     return `<div class="mrow ${finished ? "is-finished" : ""}">
@@ -1325,6 +1471,10 @@
     selectedMenuType = type;
     const isSoup = type === "soup";
     document.getElementById("f-m-price").style.display = isSoup ? "none" : ""; // soups/stews: NO price field
+    document.getElementById("f-m-ptype").style.display = type === "food" ? "" : "none"; // only foods can be per-unit
+    setPricingType("fixed");
+    document.getElementById("mUnit").value = "";
+    clearFieldError("f-m-unit");
     document.getElementById("mPriceLabel").textContent = type === "protein" ? "Additional Price:" : "Price:";
     document.getElementById("mName").value = "";
     document.getElementById("mPrice").value = "";
@@ -1332,6 +1482,19 @@
     hideModalBanner("menuFormBanner");
     document.querySelector("#menuSaveBtn .btn-label").textContent = "Add " + TYPE_LABEL[type];
   }
+
+  let selectedPricing = "fixed";
+  function setPricingType(t){
+    selectedPricing = t;
+    document.querySelectorAll("#mPtypeSeg button").forEach(b => b.classList.toggle("on", b.dataset.ptype === t));
+    const isUnit = t === "unit" && selectedMenuType === "food";
+    document.getElementById("f-m-unit").style.display = isUnit ? "" : "none";
+    document.getElementById("mPriceLabel").textContent = selectedMenuType === "protein" ? "Additional Price:" : (isUnit ? "Price per unit:" : "Price:");
+  }
+  document.getElementById("mPtypeSeg").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-ptype]");
+    if(b) setPricingType(b.dataset.ptype);
+  });
 
   function openMenuModal(){
     editingMenuItemId = null;
@@ -1348,6 +1511,10 @@
     document.getElementById("menuModalTitle").textContent = "Edit " + TYPE_LABEL[item.type];
     document.getElementById("mName").value = item.name;
     document.getElementById("mPrice").value = item.type === "soup" ? "" : item.price;
+    if(item.type === "food" && item.pricingType === "unit"){
+      setPricingType("unit");
+      document.getElementById("mUnit").value = item.unitName || "";
+    }
     document.querySelector("#menuSaveBtn .btn-label").textContent = "Save Changes";
     showMenuStep("form");
     openModal("modalMenuItem");
@@ -1374,6 +1541,9 @@
       const priceInvalid = priceRaw === "" || isNaN(priceRaw) || Number(priceRaw) < 0;
       toggleFieldError("f-m-price", priceInvalid); if(priceInvalid) valid = false;
     }
+    const unitName = document.getElementById("mUnit").value.trim();
+    const isUnit = selectedMenuType === "food" && selectedPricing === "unit";
+    toggleFieldError("f-m-unit", isUnit && !unitName); if(isUnit && !unitName) valid = false;
     if(!valid) return;
 
     const btn = document.getElementById("menuSaveBtn");
@@ -1382,10 +1552,12 @@
       if(editingMenuItemId){
         const payload = { name };
         if(selectedMenuType !== "soup") payload.price = priceRaw;
+        if(selectedMenuType === "food"){ payload.pricingType = selectedPricing; if(isUnit) payload.unitName = unitName; }
         await updateMenuItem(editingMenuItemId, payload);
       }else{
         const payload = { type: selectedMenuType, name };
         if(selectedMenuType !== "soup") payload.price = priceRaw;
+        if(selectedMenuType === "food"){ payload.pricingType = selectedPricing; if(isUnit) payload.unitName = unitName; }
         await createMenuItem(payload);
       }
       closeModal("modalMenuItem");
@@ -1397,6 +1569,171 @@
       setBtnLoading(btn, false);
     }
   });
+
+  /* ================================================================
+     Customer orders (read-only for the Admin, except Cancel)
+  ================================================================ */
+  let ordersCache = [];
+  const ORDER_STATUS = {
+    new:       { label: "New",       cls: "badge-warn" },
+    preparing: { label: "Preparing", cls: "badge-info" },
+    ready:     { label: "Ready",     cls: "badge-info" },
+    completed: { label: "Completed", cls: "badge-success" },
+    cancelled: { label: "Cancelled", cls: "badge-muted" }
+  };
+  function orderStatusBadge(st){ const m = ORDER_STATUS[st] || { label: st, cls: "badge-muted" }; return `<span class="badge ${m.cls}">${m.label}</span>`; }
+  function orderItemsText(o){
+    return (o.items || []).map(i => {
+      const qty = i.pricingType === "unit" ? `${i.quantity} ${esc(i.unitName || "unit")}${i.quantity === 1 ? "" : "s"}` : `× ${i.quantity}`;
+      return `${esc(i.name)} ${qty}`;
+    }).join("; ");
+  }
+
+  async function loadOrders(){
+    const f = document.getElementById("ordFilter").value;
+    const q = f === "active" ? "status=active" : (f === "today" ? "date=today" : "");
+    try{
+      ordersCache = await getOrders(q);
+      renderOrders(ordersCache);
+    }catch(err){
+      ordersCache = [];
+      renderOrders([]);
+    }
+  }
+  document.getElementById("ordFilter").addEventListener("change", loadOrders);
+
+  function renderOrders(list){
+    const wrap = document.getElementById("ordersWrap");
+    if(!list.length){
+      wrap.innerHTML = `<div class="empty-state"><p>No customer orders yet.</p><span>Orders placed from a table's QR code will appear here.</span></div>`;
+      return;
+    }
+    wrap.innerHTML = `<div style="overflow-x:auto;"><table><thead><tr><th>Order</th><th>Table</th><th>Items</th><th>Total</th><th>Status</th><th>Time</th><th>Handled by</th><th></th></tr></thead><tbody>${
+      list.map(o => `<tr class="clickable" data-id="${esc(o.orderId)}">
+        <td>${esc(o.orderId)}</td><td>${esc(o.tableName)}</td><td>${orderItemsText(o)}</td><td>${money(o.total)}</td>
+        <td>${orderStatusBadge(o.status)}</td><td>${formatTime(o.createdAt)}</td><td>${o.handledByName ? esc(o.handledByName) : "—"}</td>
+        <td><button class="btn btn-ghost btn-sm">View</button></td></tr>`).join("")
+    }</tbody></table></div>`;
+    wrap.querySelectorAll("tr.clickable").forEach(tr => tr.addEventListener("click", () => openOrderModal(tr.dataset.id)));
+  }
+
+  let openOrderId = null;
+  function openOrderModal(id){
+    const o = ordersCache.find(x => x.orderId === id);
+    if(!o) return;
+    openOrderId = id;
+    hideModalBanner("orderModalBanner");
+    const lines = (o.items || []).map(i => {
+      const qty = i.pricingType === "unit" ? `${i.quantity} ${esc(i.unitName || "unit")}${i.quantity === 1 ? "" : "s"} @ ${gh(i.foodPrice)}` : `× ${i.quantity}`;
+      const prots = i.proteins ? i.proteins.map(p => `<br>&nbsp;&nbsp;Protein: ${esc(p.name)} × ${p.quantity} — ${gh(p.subtotal)}`).join("") : (i.proteinName ? `<br>&nbsp;&nbsp;Protein: ${esc(i.proteinName)} + ${gh(i.proteinPrice)}` : "");
+      return `<b>${esc(i.foodName)}</b> ${qty}${i.soups ? i.soups.map(x => `<br>&nbsp;&nbsp;Soup/Stew: ${esc(x.name)} × ${x.quantity}`).join("") : (i.soupName ? `<br>&nbsp;&nbsp;Soup/Stew: ${esc(i.soupName)}` : "")}${prots}<br>&nbsp;&nbsp;${money(i.subtotal)}`;
+    }).join("<br><br>");
+    document.getElementById("modalOrderBody").innerHTML = `
+      <div class="detail-row"><span class="k">Order</span><span class="v">${esc(o.orderId)}</span></div>
+      <div class="detail-row"><span class="k">Table</span><span class="v">${esc(o.tableName)}</span></div>
+      <div class="detail-row"><span class="k">Status</span><span class="v">${orderStatusBadge(o.status)}</span></div>
+      <div class="detail-row"><span class="k">Placed</span><span class="v">${formatTime(o.createdAt)}</span></div>
+      <div class="detail-row"><span class="k">Handled by</span><span class="v">${o.handledByName ? esc(o.handledByName) : "Not picked up yet"}</span></div>
+      <div class="detail-row"><span class="k">Payment</span><span class="v">${o.paymentStatus === "paid" ? "Paid — " + (o.paymentMethod === "cash" ? "Cash" : "Mobile Money") : "Not paid yet"}</span></div>
+      <div class="detail-row"><span class="k">Items</span><span class="v" style="text-align:left;max-width:280px;">${lines}</span></div>
+      <div class="detail-row"><span class="k">Total</span><span class="v">${money(o.total)}</span></div>
+      ${o.transactionId ? `<div class="detail-row"><span class="k">Transaction</span><span class="v">${esc(o.transactionId)}</span></div>` : ""}`;
+    document.getElementById("cancelOrderBtn").style.display = (o.status === "completed" || o.status === "cancelled") ? "none" : "";
+    openModal("modalOrder");
+  }
+  document.getElementById("cancelOrderBtn").addEventListener("click", async () => {
+    if(!openOrderId) return;
+    if(!window.confirm("Cancel this customer order?")) return;
+    const btn = document.getElementById("cancelOrderBtn");
+    setBtnLoading(btn, true);
+    try{
+      await cancelOrder(openOrderId);
+      closeModal("modalOrder");
+      toast("Order cancelled.", "success");
+      loadOrders(); loadDashboard();
+    }catch(err){
+      showModalBanner("orderModalBanner", "orderModalBannerText", err.message);
+    }finally{ setBtnLoading(btn, false); }
+  });
+
+  /* ================================================================
+     Tables & QR codes. QR images are generated by the server (no outside
+     service). Print/download work per table or for all tables at once.
+  ================================================================ */
+  let tablesCache = [];
+  async function loadTables(){
+    try{
+      const d = await getTables();
+      tablesCache = d.tables;
+      const note = document.getElementById("qrBaseNote");
+      note.innerHTML = `QR codes open <b>${esc(d.baseUrl)}/t/…</b> on the customer's phone. ${/localhost|127\.0\.0\.1/.test(d.baseUrl) ? `<span style="color:var(--eg-error);font-weight:700;">This address only works on this computer — open the Admin page from your real website address before printing QR codes.</span>` : ""}`;
+      renderTables();
+    }catch(err){
+      tablesCache = [];
+      renderTables();
+    }
+  }
+  function renderTables(){
+    const wrap = document.getElementById("tablesWrap");
+    if(!tablesCache.length){
+      wrap.innerHTML = `<div class="empty-state"><p>No tables yet.</p><span>Add your tables above, then print each table's QR code.</span></div>`;
+      return;
+    }
+    wrap.innerHTML = `<div class="tbl-grid">${tablesCache.map(t => `
+      <div class="tbl-card ${t.active ? "" : "inactive"}">
+        <h3>${esc(t.name)}</h3>
+        <img src="${API_BASE}/admin/tables/${encodeURIComponent(t.id)}/qr.svg?v=${encodeURIComponent(t.qrId)}" alt="QR code for ${esc(t.name)}">
+        <div class="url">${esc(t.url)}</div>
+        <div class="acts">
+          <button class="btn btn-ghost btn-sm" data-tact="print" data-id="${t.id}">Print</button>
+          <a class="btn btn-ghost btn-sm" style="text-decoration:none;" href="${API_BASE}/admin/tables/${encodeURIComponent(t.id)}/qr.svg?download=1">Download</a>
+          <button class="btn btn-ghost btn-sm" data-tact="toggle" data-id="${t.id}">${t.active ? "Deactivate" : "Activate"}</button>
+        </div>
+      </div>`).join("")}</div>`;
+  }
+  document.getElementById("tablesWrap").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-tact]");
+    if(!b) return;
+    const t = tablesCache.find(x => x.id === b.dataset.id);
+    if(!t) return;
+    if(b.dataset.tact === "print") return printQr([t]);
+    b.disabled = true;
+    try{ await setTableActive(t.id, !t.active); toast(t.name + (t.active ? " deactivated." : " activated."), "success"); loadTables(); }
+    catch(err){ toast(err.message, "error"); b.disabled = false; }
+  });
+  document.getElementById("addTablesBtn").addEventListener("click", async () => {
+    const n = Number(document.getElementById("addTablesCount").value);
+    const btn = document.getElementById("addTablesBtn");
+    btn.disabled = true;
+    try{ await addTables(n); toast(n === 1 ? "Table added." : n + " tables added.", "success"); loadTables(); }
+    catch(err){ toast(err.message, "error"); }
+    finally{ btn.disabled = false; }
+  });
+  document.getElementById("printAllQrBtn").addEventListener("click", () => {
+    const active = tablesCache.filter(t => t.active);
+    if(!active.length) return toast("Add a table first.", "error");
+    printQr(active);
+  });
+
+  async function printQr(list){
+    const w = window.open("", "_blank");
+    if(!w) return toast("Allow pop-ups to print QR codes.", "error");
+    w.document.write("<p style='font-family:sans-serif'>Preparing QR codes…</p>");
+    try{
+      const svgs = await Promise.all(list.map(t => fetch(API_BASE + "/admin/tables/" + encodeURIComponent(t.id) + "/qr.svg").then(r => r.text())));
+      const pages = list.map((t, i) => `<section><div class="brand">EASTERN GATE</div><div class="qr">${svgs[i]}</div><h1>${esc(t.name)}</h1><p>Scan to see today's menu and order</p></section>`).join("");
+      w.document.open();
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Eastern Gate — table QR codes</title><style>
+        body{margin:0;font-family:Georgia,serif;color:#14432A;}
+        section{page-break-after:always;text-align:center;padding:48px 24px;}
+        section:last-child{page-break-after:auto;}
+        .brand{letter-spacing:.3em;font-size:14px;font-weight:700;color:#B8842E;}
+        .qr svg{width:320px;height:320px;margin:24px auto;display:block;}
+        h1{font-size:48px;margin:8px 0;}p{font-family:Arial,sans-serif;font-size:16px;color:#444;}
+      </style></head><body>${pages}<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>`);
+      w.document.close();
+    }catch(err){ w.close(); toast("Could not prepare the QR codes.", "error"); }
+  }
 
   /* ================================================================
      Reports
@@ -1462,6 +1799,8 @@
   ================================================================ */
   function loadViewData(key){
     if(key === "dashboard") loadDashboard();
+    if(key === "orders") loadOrders();
+    if(key === "tables") loadTables();
     if(key === "sales") loadSales();
     if(key === "sellers") loadSellers();
     if(key === "menu") loadMenu();

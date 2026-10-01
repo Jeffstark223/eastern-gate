@@ -1,0 +1,23 @@
+# Render Blueprint for Eastern Gate.
+# A Persistent Disk is REQUIRED for data to survive deploys/restarts, and
+# Render only offers disks on paid web-service plans (not the free plan).
+services:
+  - type: web
+    name: eastern-gate
+    runtime: node
+    plan: starter            # disks are not available on the free plan
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true  # created once, then kept — do not change it
+      - key: DATA_DIR
+        value: /var/data     # must match the disk's mountPath below
+    disk:
+      name: eastern-gate-data
+      mountPath: /var/data
+      sizeGB: 1

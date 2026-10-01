@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eastern Gate — Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --eg-green:#14432A; --eg-green-dark:#0D2E1C; --eg-green-light:#1F5C3B;
+    --eg-gold:#D9A441; --eg-bg:#FBF8F2; --eg-surface:#FFFFFF; --eg-text:#1C1B17;
+    --eg-muted:#6B6558; --eg-border:#E4DFD1; --eg-success:#2F7A4D; --eg-success-bg:#E7F2EA;
+    --eg-error:#C0392B; --eg-error-bg:#FBEAE7; --eg-warn:#8A6416; --eg-warn-bg:#FBF3DF;
+    --radius:16px; --radius-sm:12px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;min-height:100%;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--eg-text);background:var(--eg-bg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;padding-bottom:96px;}
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;font-weight:500;}
+  button{font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+
+  header.top{background:linear-gradient(135deg,var(--eg-green-dark),var(--eg-green));color:#fff;padding:18px 0 20px;}
+  .top .row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .glyph{width:32px;height:32px;border:2px solid var(--eg-gold);border-radius:9px;display:flex;align-items:center;justify-content:center;transform:rotate(45deg);flex-shrink:0;}
+  .glyph span{transform:rotate(-45deg);color:var(--eg-gold);font-family:'Fraunces',serif;font-weight:600;font-size:15px;}
+  .wordmark{font-family:'Fraunces',serif;font-size:18px;}
+  .table-pill{background:var(--eg-gold);color:#2A1E05;font-weight:800;font-size:14px;padding:8px 14px;border-radius:999px;white-space:nowrap;}
+  .top p{margin:14px 0 0;font-size:14px;color:#D8E6DC;}
+
+  .banner{border-radius:var(--radius-sm);padding:13px 15px;font-size:14px;line-height:1.45;margin:16px 0 0;}
+  .banner.warn{background:var(--eg-warn-bg);color:var(--eg-warn);}
+  .banner.err{background:var(--eg-error-bg);color:var(--eg-error);}
+  .banner.ok{background:var(--eg-success-bg);color:var(--eg-success);}
+  .banner button{margin-top:8px;}
+
+  .sec{margin:26px 0 0;}
+  .sec h2{font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--eg-green);font-family:'Inter',sans-serif;margin-bottom:4px;}
+  .sec .hint{font-size:13px;color:var(--eg-muted);margin-bottom:10px;}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--eg-surface);border:1.5px solid var(--eg-border);border-radius:var(--radius);padding:16px;margin-bottom:10px;min-height:64px;font-size:16px;color:var(--eg-text);}
+  button.item{cursor:pointer;}
+  button.item:active{background:#EAF2EC;}
+  .item .nm{font-weight:700;}
+  .item .pr{font-weight:800;color:var(--eg-green);white-space:nowrap;font-size:15px;}
+  .item.done{background:#F4F1E8;color:#9A937F;}
+  .item.done .pr{color:var(--eg-warn);font-size:12px;letter-spacing:.05em;}
+  .item.plain{min-height:52px;padding:13px 16px;}
+  .empty{background:var(--eg-surface);border:1.5px dashed var(--eg-border);border-radius:var(--radius);padding:28px 18px;text-align:center;color:var(--eg-muted);margin-top:22px;}
+
+  /* bottom cart bar */
+  .cartbar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--eg-bg) 70%,transparent);display:none;z-index:20;}
+  .cartbar.show{display:block;}
+  .cartbar button{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:560px;margin:0 auto;background:var(--eg-green);color:#fff;border:none;border-radius:var(--radius);padding:17px 20px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(20,67,42,.3);}
+
+  /* sheets */
+  .overlay{position:fixed;inset:0;background:rgba(20,20,15,.55);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .overlay.show{display:flex;}
+  .sheet{background:var(--eg-bg);width:100%;max-width:560px;max-height:92vh;border-radius:22px 22px 0 0;display:flex;flex-direction:column;overflow:hidden;}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;}
+  .sheet-head h3{font-size:22px;}
+  .x{background:#EFEBDD;border:none;width:40px;height:40px;border-radius:50%;font-size:22px;cursor:pointer;color:var(--eg-text);}
+  .sheet-body{padding:0 20px 8px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .sheet-foot{padding:14px 20px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--eg-border);background:var(--eg-surface);}
+  .btn{display:block;width:100%;border:none;border-radius:var(--radius-sm);padding:17px;font-size:16px;font-weight:800;cursor:pointer;background:var(--eg-green);color:#fff;}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .btn.ghost{background:#EFEBDD;color:var(--eg-text);margin-top:10px;}
+  .lbl{font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--eg-muted);margin:18px 0 8px;}
+  .opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--eg-surface);border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;font-size:15.5px;min-height:52px;cursor:pointer;color:var(--eg-text);}
+  .opt.sel{border-color:var(--eg-green);background:#F1F5EF;font-weight:700;}
+  .opt.sel::after{content:"✓";color:var(--eg-green);font-weight:800;margin-left:auto;padding-left:8px;}
+  .opt .pp{color:var(--eg-green);font-weight:700;white-space:nowrap;}
+  .opt.off{background:#F4F1E8;color:#9A937F;cursor:default;}
+  .opt.off .pp{color:var(--eg-warn);font-size:12px;}
+  .prow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--eg-surface);border:1.5px solid var(--eg-border);border-radius:var(--radius-sm);padding:10px 12px 10px 16px;margin-bottom:8px;min-height:60px;}
+  .prow.sel{border-color:var(--eg-green);background:#F1F5EF;}
+  .prow .pn{font-size:15.5px;font-weight:600;}
+  .prow .pp{color:var(--eg-green);font-weight:700;font-size:13px;}
+  .prow .pq{display:flex;align-items:center;gap:8px;}
+  .prow .pq button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--eg-border);background:#fff;font-size:22px;cursor:pointer;color:var(--eg-text);}
+  .prow .pq span{min-width:24px;text-align:center;font-weight:800;font-size:16px;}
+  .prow.off{background:#F4F1E8;color:#9A937F;}
+  .prow.off .pp{color:var(--eg-warn);font-size:12px;}
+  .qty{display:flex;align-items:center;gap:12px;}
+  .qty button{width:52px;height:52px;border-radius:14px;border:1.5px solid var(--eg-border);background:#fff;font-size:26px;cursor:pointer;color:var(--eg-text);}
+  .qty input{width:84px;height:52px;text-align:center;font-size:22px;font-weight:800;border:1.5px solid var(--eg-border);border-radius:14px;font-family:inherit;background:#fff;}
+  .note{font-size:13px;color:var(--eg-muted);margin-top:8px;}
+  .totrow{display:flex;justify-content:space-between;align-items:baseline;font-size:18px;font-weight:800;margin-bottom:12px;}
+  .totrow .big{font-family:'Fraunces',serif;font-size:26px;}
+
+  /* cart lines */
+  .line{background:var(--eg-surface);border:1.5px solid var(--eg-border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+  .line .t{font-weight:800;font-size:16px;}
+  .line .s{color:var(--eg-muted);font-size:14.5px;margin-top:2px;}
+  .line .f{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;}
+  .line .p{font-weight:800;font-size:16px;}
+  .line .ctl{display:flex;align-items:center;gap:8px;}
+  .line .ctl button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--eg-border);background:#fff;font-size:22px;cursor:pointer;}
+  .line .ctl .rm{width:auto;padding:0 12px;font-size:13.5px;font-weight:700;color:var(--eg-error);}
+  .line .ctl span{min-width:26px;text-align:center;font-weight:800;}
+
+  /* confirmation */
+  .confirm{text-align:center;padding:26px 0 8px;}
+  .ring{width:76px;height:76px;border-radius:50%;background:var(--eg-success-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+  .confirm h2{font-size:30px;margin-bottom:4px;}
+  .kv{background:var(--eg-surface);border:1.5px solid var(--eg-border);border-radius:var(--radius);margin:20px 0 14px;text-align:left;}
+  .kv div{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #F1EDE2;font-size:15px;}
+  .kv div:last-child{border-bottom:none;}
+  .kv span:first-child{color:var(--eg-muted);}
+  .kv span:last-child{font-weight:800;text-align:right;}
+  .spin{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px;margin-right:8px;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="row">
+      <div class="brand"><div class="glyph"><span>E</span></div><div class="wordmark">Eastern Gate</div></div>
+      <div class="table-pill" id="tablePill" style="display:none;"></div>
+    </div>
+    <p id="topLine">Today's menu</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banners"></div>
+  <div id="menuRoot"><div class="empty">Loading today's menu…</div></div>
+</main>
+
+<div class="cartbar" id="cartBar"><button type="button" id="cartBarBtn"><span id="cartBarCount">View your order</span><span id="cartBarTotal"></span></button></div>
+
+<!-- Build a dish -->
+<div class="overlay" id="sheetBuilder">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="bName">Fufu</h3><button type="button" class="x" data-close="sheetBuilder" aria-label="Close">&times;</button></div>
+    <div class="sheet-body">
+      <div style="font-weight:800;color:var(--eg-green);font-size:17px;" id="bPrice"></div>
+      <div id="bSoupWrap"><div class="lbl">Soup / Stew — free</div><div id="bSoups"></div><div class="note" id="bSoupNote"></div></div>
+      <div id="bProteinWrap"><div class="lbl">Protein</div><div id="bProteins"></div></div>
+      <div class="lbl" id="bQtyLbl">Quantity</div>
+      <div class="qty"><button type="button" id="bDec" aria-label="Less">−</button><input type="number" id="bQty" min="1" max="200" value="1" inputmode="numeric"><button type="button" id="bInc" aria-label="More">+</button></div>
+      <div class="note" id="bNote"></div>
+    </div>
+    <div class="sheet-foot">
+      <div class="totrow"><span>Total</span><span class="big" id="bTotal">GHS 0</span></div>
+      <button type="button" class="btn" id="bAdd">Add to order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart -->
+<div class="overlay" id="sheetCart">
+  <div class="sheet">
+    <div class="sheet-head"><h3>Your order</h3><button type="button" class="x" data-close="sheetCart" aria-label="Close">&times;</button></div>
+    <div class="sheet-body" id="cartBody"></div>
+    <div class="sheet-foot" id="cartFoot"></div>
+  </div>
+</div>
+
+<!-- Confirmation -->
+<div class="overlay" id="sheetDone">
+  <div class="sheet">
+    <div class="sheet-body" id="doneBody"></div>
+    <div class="sheet-foot"><button type="button" class="btn" id="doneBtn">Back to menu</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- helpers ---------------- */
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const gh = (n) => { n = Number(n || 0); return "GHS " + (Number.isInteger(n) ? n : n.toFixed(2)); };
+  const unitWord = (name, n) => n === 1 ? name : name + "s";
+  const store = {
+    get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+
+  async function api(method, path, body){
+    let res;
+    try{
+      res = await fetch("/api/public" + path, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    }catch(e){
+      const err = new Error("Can't reach the restaurant. Check your connection and try again."); err.type = "network"; throw err;
+    }
+    let json = null;
+    try{ json = await res.json(); }catch(e){}
+    if(!res.ok || !json || json.success === false){
+      const err = new Error((json && json.message) || "Something went wrong. Please try again."); err.status = res.status; throw err;
+    }
+    return json.data;
+  }
+
+  /* ---------------- state ---------------- */
+  const qr = new URLSearchParams(location.search).get("t");
+  let table = null;          // { number, name } — from the QR code, never typed
+  let tableError = "";
+  let menu = [];             // today's menu from the backend
+  let cart = [];
+  let cartSeq = 1;
+  const CART_KEY = "eg_cart_" + (qr || "none");
+  const ORDER_KEY = "eg_order_" + (qr || "none");
+  let lastOrder = store.get(ORDER_KEY); // { orderId, trackKey }
+  let lastOrderStatus = null;
+  let canOrder = false;
+
+  /* ---------------- pricing preview (server is the official price) ---------------- */
+  // total = food price x food quantity + sum(protein price x protein quantity)
+  // Proteins are counted on their own, so 2 plates can share 1 protein.
+  const protSum = (c) => (c.proteins || []).reduce((s, p) => s + p.price * p.qty, 0);
+  function lineTotal(c){ return c.foodPrice * c.qty + protSum(c); }
+  const cartTotal = () => cart.reduce((s, c) => s + lineTotal(c), 0);
+  const cartCount = () => cart.length;
+
+  /* ---------------- boot ---------------- */
+  (async function init(){
+    if(qr){
+      try{ table = await api("GET", "/table/" + encodeURIComponent(qr)); }
+      catch(e){ tableError = e.message; }
+    }
+    canOrder = !!table;
+    if(table){
+      $("tablePill").textContent = table.name;
+      $("tablePill").style.display = "";
+      $("topLine").textContent = "Choose your food and we'll bring it to your table.";
+      const saved = store.get(CART_KEY);
+      if(Array.isArray(saved)) cart = saved.filter(c => Array.isArray(c.proteins) && Array.isArray(c.soups)); // ignore carts saved in the old one-protein format
+    }else{
+      $("topLine").textContent = "Today's menu";
+    }
+    await loadMenu();
+    if(lastOrder) refreshOrderStatus();
+    // The menu is re-read from the server often, so an item that just ran out stops being orderable.
+    setInterval(() => { if(!document.hidden) loadMenu(true); }, 20000);
+    document.addEventListener("visibilitychange", () => { if(!document.hidden){ loadMenu(true); if(lastOrder) refreshOrderStatus(); } });
+  })();
+
+  async function loadMenu(quiet){
+    try{
+      const d = await api("GET", "/menu");
+      menu = d.items;
+      const sellable = new Set(menu.filter(i => i.status === "available").map(i => i.id));
+      const before = cart.length;
+      cart = cart.filter(c => sellable.has(c.foodId) && (c.soups || []).every(p => sellable.has(p.id)) && (c.proteins || []).every(p => sellable.has(p.id)));
+      if(before !== cart.length) saveCart(), showNotice("Something in your order just ran out and was removed.", "warn");
+    }catch(e){
+      if(quiet) return;
+      $("menuRoot").innerHTML = `<div class="empty">${esc(e.message)}<br><br><button class="btn" style="max-width:220px;margin:0 auto;" onclick="location.reload()">Try again</button></div>`;
+      return;
+    }
+    renderBanners();
+    renderMenu();
+    renderCartBar();
+    if($("sheetCart").classList.contains("show")) renderCart();
+  }
+
+  function saveCart(){ if(table) store.set(CART_KEY, cart); }
+
+  let notice = null;
+  function showNotice(msg, kind){ notice = { msg, kind }; renderBanners(); setTimeout(() => { notice = null; renderBanners(); }, 7000); }
+
+  function renderBanners(){
+    let h = "";
+    if(!qr) h += `<div class="banner warn"><b>Scan the QR code on your table to order.</b> You can look at today's menu below.</div>`;
+    else if(tableError) h += `<div class="banner err">${esc(tableError)}</div>`;
+    if(notice) h += `<div class="banner ${notice.kind === "warn" ? "warn" : "err"}">${esc(notice.msg)}</div>`;
+    if(lastOrder && lastOrderStatus && lastOrderStatus !== "completed" && lastOrderStatus !== "cancelled"){
+      h += `<div class="banner ok">Your order <b>${esc(lastOrder.orderId)}</b>: <b>${esc(statusText(lastOrderStatus))}</b><br><button type="button" class="btn ghost" style="margin-top:8px;padding:11px;" id="viewOrderBtn">View order</button></div>`;
+    }
+    $("banners").innerHTML = h;
+    const v = $("viewOrderBtn"); if(v) v.onclick = () => showDone(lastOrder);
+  }
+
+  /* ---------------- menu ---------------- */
+  function renderMenu(){
+    const of = (t) => menu.filter(i => i.type === t);
+    const foods = of("food"), soups = of("soup"), proteins = of("protein");
+    if(!foods.length && !soups.length && !proteins.length){
+      $("menuRoot").innerHTML = `<div class="empty"><b>Today's menu isn't ready yet.</b><br>Please ask a member of staff.</div>`;
+      return;
+    }
+    const foodHtml = foods.map(f => {
+      const price = f.pricingType === "unit" ? gh(f.price) + " / " + esc(f.unitName || "unit") : gh(f.price);
+      return f.status === "finished"
+        ? `<div class="item done"><span class="nm">${esc(f.name)}</span><span class="pr">FINISHED TODAY</span></div>`
+        : (canOrder
+            ? `<button type="button" class="item" data-food="${esc(f.id)}"><span class="nm">${esc(f.name)}</span><span class="pr">${price}</span></button>`
+            : `<div class="item"><span class="nm">${esc(f.name)}</span><span class="pr">${price}</span></div>`);
+    }).join("");
+    const soupHtml = soups.map(s => s.status === "finished"
+      ? `<div class="item plain done"><span class="nm">${esc(s.name)}</span><span class="pr">FINISHED TODAY</span></div>`
+      : `<div class="item plain"><span class="nm">${esc(s.name)}</span></div>`).join("");
+    const protHtml = proteins.map(p => p.status === "finished"
+      ? `<div class="item plain done"><span class="nm">${esc(p.name)}</span><span class="pr">FINISHED TODAY</span></div>`
+      : `<div class="item plain"><span class="nm">${esc(p.name)}</span><span class="pr">+ ${gh(p.price)}</span></div>`).join("");
+    $("menuRoot").innerHTML =
+      (foods.length ? `<section class="sec"><h2>Foods</h2>${canOrder ? `<div class="hint">Tap a food to choose your soup, protein and how much you want.</div>` : ""}${foodHtml}</section>` : "") +
+      (soups.length ? `<section class="sec"><h2>Soups &amp; Stews</h2><div class="hint">Included with your food — no extra charge.</div>${soupHtml}</section>` : "") +
+      (proteins.length ? `<section class="sec"><h2>Proteins</h2><div class="hint">Add to your food for the extra price shown.</div>${protHtml}</section>` : "");
+  }
+  $("menuRoot").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-food]");
+    if(b) openBuilder(b.dataset.food);
+  });
+
+  /* ---------------- overlays ---------------- */
+  const open = (id) => $(id).classList.add("show");
+  const close = (id) => $(id).classList.remove("show");
+  document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => close(b.dataset.close)));
+  ["sheetBuilder", "sheetCart"].forEach(id => $(id).addEventListener("click", (e) => { if(e.target === $(id)) close(id); }));
+
+  /* ---------------- builder ---------------- */
+  let bFood = null, bSoup = {}, bProt = {}, bQty = 1;  // bSoup / bProt: id -> quantity
+  const bSoupCount = () => Object.values(bSoup).reduce((a, b) => a + b, 0);  // bProt: proteinId -> quantity
+
+  function optionList(list, selected, withPrice, none){
+    return `<button type="button" class="opt ${selected === "" ? "sel" : ""}" data-v="">${none}</button>` +
+      list.map(i => i.status === "finished"
+        ? `<div class="opt off"><span>${esc(i.name)}</span><span class="pp">FINISHED</span></div>`
+        : `<button type="button" class="opt ${selected === i.id ? "sel" : ""}" data-v="${esc(i.id)}"><span>${esc(i.name)}</span>${withPrice ? `<span class="pp">+ ${gh(i.price)}</span>` : ""}</button>`).join("");
+  }
+
+  function protRows(){
+    const list = menu.filter(i => i.type === "protein");
+    return list.map(i => {
+      if(i.status === "finished") return `<div class="prow off"><div><div class="pn">${esc(i.name)}</div></div><span class="pp">FINISHED</span></div>`;
+      const q = bProt[i.id] || 0;
+      return `<div class="prow ${q ? "sel" : ""}" data-pid="${esc(i.id)}"><div><div class="pn">${esc(i.name)}</div><div class="pp">+ ${gh(i.price)} each</div></div>
+        <div class="pq"><button type="button" data-pa="dec" aria-label="Less">−</button><span>${q}</span><button type="button" data-pa="inc" aria-label="More">+</button></div></div>`;
+    }).join("");
+  }
+  function soupRows(){
+    const list = menu.filter(i => i.type === "soup");
+    return list.map(i => {
+      if(i.status === "finished") return `<div class="prow off"><div><div class="pn">${esc(i.name)}</div></div><span class="pp">FINISHED</span></div>`;
+      const q = bSoup[i.id] || 0;
+      return `<div class="prow ${q ? "sel" : ""}" data-sid="${esc(i.id)}"><div><div class="pn">${esc(i.name)}</div><div class="pp">no extra charge</div></div>
+        <div class="pq"><button type="button" data-sa="dec" aria-label="Less">−</button><span>${q}</span><button type="button" data-sa="inc" aria-label="More">+</button></div></div>`;
+    }).join("");
+  }
+  const soupList = () => Object.entries(bSoup).map(([id, q]) => { const it = menu.find(i => i.id === id); return it ? { id, name: it.name, qty: q } : null; }).filter(Boolean);
+  function trimSoups(){
+    if(bFood.pricingType === "unit") return;
+    let extra = bSoupCount() - bQty;
+    for(const id of Object.keys(bSoup).reverse()){
+      if(extra <= 0) break;
+      const cut = Math.min(extra, bSoup[id]); bSoup[id] -= cut; extra -= cut;
+      if(bSoup[id] <= 0) delete bSoup[id];
+    }
+  }
+  const protList = () => Object.entries(bProt).map(([id, q]) => { const it = menu.find(i => i.id === id); return it ? { id, name: it.name, price: Number(it.price), qty: q } : null; }).filter(Boolean);
+
+  function openBuilder(foodId){
+    const f = menu.find(i => i.id === foodId);
+    if(!f || f.status !== "available") return;
+    bFood = f; bSoup = {}; bProt = {}; bQty = 1;
+    const unit = f.pricingType === "unit";
+    $("bName").textContent = f.name;
+    $("bPrice").textContent = unit ? gh(f.price) + " / " + (f.unitName || "unit") : gh(f.price);
+    $("bQtyLbl").textContent = unit ? "How many " + unitWord(f.unitName || "unit", 2) + "?" : "Quantity";
+    $("bNote").textContent = "Proteins are counted separately — for example 2 " + (unit ? unitWord(f.unitName || "unit", 2) : "plates") + " can share 1 protein.";
+    const soups = menu.filter(i => i.type === "soup"), prots = menu.filter(i => i.type === "protein");
+    $("bSoupWrap").style.display = soups.length ? "" : "none";
+    $("bProteinWrap").style.display = prots.length ? "" : "none";
+    drawBuilder();
+    open("sheetBuilder");
+    $("bSoups").parentNode.parentNode.scrollTop = 0;
+  }
+  function drawSoups(){
+    trimSoups();
+    $("bSoups").innerHTML = soupRows();
+    $("bSoupNote").textContent = bFood.pricingType === "unit" ? "" : (bSoupCount() + " of " + bQty + " plate" + (bQty === 1 ? "" : "s") + " have a soup. Raise the quantity to choose a different soup for another plate.");
+  }
+  function drawBuilder(){
+    drawSoups();
+    $("bProteins").innerHTML = protRows();
+    $("bQty").value = bQty;
+    $("bTotal").textContent = gh(lineTotal({ foodPrice: Number(bFood.price), proteins: protList(), qty: bQty }));
+  }
+  $("bSoups").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-sa]");
+    if(!b) return;
+    const id = b.closest(".prow").dataset.sid;
+    const q = (bSoup[id] || 0) + (b.dataset.sa === "inc" ? 1 : -1);
+    if(q > (bSoup[id] || 0) && bFood.pricingType !== "unit" && bSoupCount() >= bQty){
+      $("bSoupNote").textContent = "Each plate gets one soup. Raise the quantity below to add another plate."; return;
+    }
+    if(q <= 0) delete bSoup[id]; else bSoup[id] = Math.min(50, q);
+    drawBuilder();
+  });
+  $("bProteins").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-pa]");
+    if(!b) return;
+    const id = b.closest(".prow").dataset.pid;
+    const q = (bProt[id] || 0) + (b.dataset.pa === "inc" ? 1 : -1);
+    if(q <= 0) delete bProt[id]; else bProt[id] = Math.min(50, q);
+    drawBuilder();
+  });
+  const setQty = (n) => { bQty = Math.min(200, Math.max(1, Math.floor(Number(n) || 1))); drawBuilder(); };
+  $("bInc").addEventListener("click", () => setQty(bQty + 1));
+  $("bDec").addEventListener("click", () => setQty(bQty - 1));
+  $("bQty").addEventListener("input", (e) => { bQty = Math.min(200, Math.max(1, Math.floor(Number(e.target.value) || 1))); drawSoups(); $("bTotal").textContent = gh(lineTotal({ foodPrice: Number(bFood.price), proteins: protList(), qty: bQty })); });
+  // On blur only tidy the number — never re-draw the option lists, or the tap that caused the blur is lost.
+  $("bQty").addEventListener("blur", () => { $("bQty").value = bQty; });
+
+  $("bAdd").addEventListener("click", () => {
+    cart.push({
+      key: "c" + (cartSeq++), foodId: bFood.id, foodName: bFood.name, foodPrice: Number(bFood.price),
+      pricingType: bFood.pricingType === "unit" ? "unit" : "fixed", unitName: bFood.unitName || null,
+      soups: soupList(),
+      proteins: protList(),
+      qty: bQty
+    });
+    saveCart(); close("sheetBuilder"); renderCartBar();
+  });
+
+  /* ---------------- cart ---------------- */
+  function renderCartBar(){
+    const n = cartCount();
+    $("cartBar").classList.toggle("show", n > 0 && canOrder);
+    $("cartBarCount").textContent = "View your order (" + n + ")";
+    $("cartBarTotal").textContent = gh(cartTotal());
+  }
+  $("cartBarBtn").addEventListener("click", () => { renderCart(); open("sheetCart"); });
+
+  let placing = false, cartError = "";
+  function renderCart(){
+    if(!cart.length){
+      $("cartBody").innerHTML = `<div class="empty" style="margin-top:6px;">Your order is empty.<br>Tap a food on the menu to start.</div>`;
+      $("cartFoot").innerHTML = `<button type="button" class="btn ghost" style="margin-top:0;" data-close="sheetCart" id="cartEmptyClose">Back to menu</button>`;
+      $("cartEmptyClose").onclick = () => close("sheetCart");
+      return;
+    }
+    $("cartBody").innerHTML = cart.map(c => `
+      <div class="line" data-k="${c.key}">
+        <div class="t">${esc(c.foodName)} × ${c.pricingType === "unit" ? c.qty + " " + esc(unitWord(c.unitName || "unit", c.qty)) : c.qty}</div>
+        ${(c.soups || []).map(x => `<div class="s">${esc(x.name)} × ${x.qty}</div>`).join("")}
+        ${(c.proteins || []).map(p => `<div class="s">${esc(p.name)} × ${p.qty}</div>`).join("")}
+        <div class="f"><span class="p">${gh(lineTotal(c))}</span>
+          <span class="ctl"><button type="button" data-a="dec" aria-label="Less">−</button><span>${c.qty}</span><button type="button" data-a="inc" aria-label="More">+</button><button type="button" class="rm" data-a="rm">Remove</button></span></div>
+      </div>`).join("");
+    $("cartFoot").innerHTML = `
+      ${cartError ? `<div class="banner err" style="margin:0 0 12px;">${esc(cartError)}</div>` : ""}
+      <div class="totrow"><span>TOTAL</span><span class="big">${gh(cartTotal())}</span></div>
+      <div class="note" style="margin:-4px 0 12px;">Payment is not taken here. You pay Eastern Gate directly (cash or Mobile Money) at your table or the counter.</div>
+      <button type="button" class="btn" id="placeBtn" ${placing ? "disabled" : ""}>${placing ? '<span class="spin"></span>Placing order…' : "Place order"}</button>`;
+    $("placeBtn").onclick = placeOrder;
+  }
+  $("cartBody").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a]");
+    if(!b) return;
+    const line = cart.find(c => c.key === b.closest(".line").dataset.k);
+    if(!line) return;
+    if(b.dataset.a === "inc") line.qty = Math.min(200, line.qty + 1);
+    if(b.dataset.a === "dec"){ line.qty -= 1; if(line.qty < 1) cart = cart.filter(c => c !== line); }
+    if(b.dataset.a === "rm") cart = cart.filter(c => c !== line);
+    cartError = ""; saveCart(); renderCart(); renderCartBar();
+  });
+
+  async function placeOrder(){
+    if(placing || !cart.length || !table) return;
+    placing = true; cartError = ""; renderCart();
+    try{
+      const o = await api("POST", "/orders", { table: qr, items: cart.map(c => ({ foodId: c.foodId, soups: (c.soups || []).map(x => ({ soupId: x.id, quantity: x.qty })), proteins: (c.proteins || []).map(p => ({ proteinId: p.id, quantity: p.qty })), quantity: c.qty })) });
+      lastOrder = { orderId: o.orderId, trackKey: o.trackKey, tableName: o.tableName, total: o.total, items: o.items };
+      lastOrderStatus = o.status;
+      store.set(ORDER_KEY, lastOrder);
+      cart = []; saveCart();
+      close("sheetCart");
+      showDone(lastOrder);
+      renderCartBar(); renderBanners();
+    }catch(err){
+      cartError = err.message;
+      await loadMenu(true); // pick up whatever just ran out
+    }finally{
+      placing = false;
+      if($("sheetCart").classList.contains("show")) renderCart();
+    }
+  }
+
+  /* ---------------- confirmation + status ---------------- */
+  function statusText(s){
+    return ({ new: "Order received", preparing: "Being prepared", ready: "Ready", completed: "Completed", cancelled: "Cancelled — please ask staff" })[s] || s;
+  }
+  function showDone(o){
+    if(!o) return;
+    $("doneBody").innerHTML = `
+      <div class="confirm">
+        <div class="ring"><svg width="38" height="38" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#2F7A4D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h2>ORDER PLACED</h2>
+        <div style="color:var(--eg-muted);font-size:14.5px;">We've sent it to the kitchen.</div>
+      </div>
+      <div class="kv">
+        <div><span>Order</span><span>${esc(o.orderId)}</span></div>
+        <div><span>Table</span><span>${esc(o.tableName || (table && table.name) || "")}</span></div>
+        <div><span>Total</span><span>${gh(o.total)}</span></div>
+        <div><span>Status</span><span id="doneStatus">${esc(statusText(lastOrderStatus || "new"))}</span></div>
+      </div>
+      <div class="note" style="text-align:center;margin-bottom:8px;">Payment is not taken in this app — please pay at your table or the counter.</div>`;
+    open("sheetDone");
+  }
+  $("doneBtn").addEventListener("click", () => { close("sheetDone"); });
+
+  async function refreshOrderStatus(){
+    if(!lastOrder) return;
+    try{
+      const o = await api("GET", "/orders/" + encodeURIComponent(lastOrder.orderId) + "?key=" + encodeURIComponent(lastOrder.trackKey));
+      lastOrderStatus = o.status;
+      const el = $("doneStatus"); if(el) el.textContent = statusText(o.status);
+      renderBanners();
+      if(o.status === "completed" || o.status === "cancelled"){ store.del(ORDER_KEY); }
+    }catch(e){
+      if(e.status === 404){ store.del(ORDER_KEY); lastOrder = null; lastOrderStatus = null; renderBanners(); }
+    }
+  }
+  setInterval(() => { if(!document.hidden && lastOrder && lastOrderStatus !== "completed" && lastOrderStatus !== "cancelled") refreshOrderStatus(); }, 10000);
+})();
+</script>
+</body>
+</html>

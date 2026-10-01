@@ -5,6 +5,9 @@ const { genId, nextSellerId } = require('../lib/ids');
 const { findMenuItem } = require('../lib/pricing');
 const { computeStatus, todayStr, withStatus } = require('../lib/menuStatus');
 const { ok, created, fail, asyncHandler } = require('../lib/respond');
+const { ACTIVE, changeOrderStatus, staffView } = require('../lib/orders');
+const QRCode = require('qrcode');
+const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -158,11 +161,23 @@ router.post(
       if (Number.isNaN(price) || price < 0) return fail(res, 400, 'Price must be a valid non-negative number.');
     }
 
+    // Only a Food can be sold per unit (e.g. GHS 5 per ball).
+    let pricingType = 'fixed';
+    let unitName = null;
+    if (type === 'food' && req.body.pricingType === 'unit') {
+      pricingType = 'unit';
+      unitName = String(req.body.unitName || '').trim();
+      if (!unitName) return fail(res, 400, 'Enter the unit name (for example: ball).');
+      if (unitName.length > 20) return fail(res, 400, 'Unit name is too long.');
+    }
+
     const item = {
       id: genId('ITEM'),
       type,
       name,
       price,
+      pricingType,
+      unitName,
       available: req.body.available !== false,
       finishedDate: null,
       finishedBy: null,
@@ -196,6 +211,18 @@ router.patch(
         item.price = price;
       }
     }
+    if (item.type === 'food' && req.body.pricingType !== undefined) {
+      if (req.body.pricingType === 'unit') {
+        const unitName = String(req.body.unitName !== undefined ? req.body.unitName : item.unitName || '').trim();
+        if (!unitName) return fail(res, 400, 'Enter the unit name (for example: ball).');
+        if (unitName.length > 20) return fail(res, 400, 'Unit name is too long.');
+        item.pricingType = 'unit';
+        item.unitName = unitName;
+      } else {
+        item.pricingType = 'fixed';
+        item.unitName = null;
+      }
+    }
     if (req.body.available !== undefined) {
       item.available = !!req.body.available;
     }
@@ -225,15 +252,141 @@ router.post(
   })
 );
 
+/* ======================= Tables & QR codes ============================ */
+/* Each table has an opaque QR identifier (qrId). The QR code encodes
+   <site>/t/<qrId>, which opens the customer menu with that table already
+   identified. Tables are deactivated rather than deleted, so old orders
+   keep pointing at a real table. */
+
+function baseUrl(req) {
+  const fixed = (process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+  return fixed || `${req.protocol}://${req.get('host')}`;
+}
+
+function tableView(t, req) {
+  return { ...t, url: `${baseUrl(req)}/t/${t.qrId}` };
+}
+
+router.get(
+  '/tables',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const list = [...data.tables].sort((a, b) => a.number - b.number).map((t) => tableView(t, req));
+    ok(res, { tables: list, baseUrl: baseUrl(req) });
+  })
+);
+
+// POST /api/admin/tables  { count }  — adds the next `count` tables (Table 6, 7, ...)
+router.post(
+  '/tables',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const count = Number(req.body.count === undefined ? 1 : req.body.count);
+    if (!Number.isInteger(count) || count < 1 || count > 50) {
+      return fail(res, 400, 'Enter how many tables to add (1 to 50).');
+    }
+    let next = data.tables.reduce((m, t) => Math.max(m, t.number), 0);
+    const added = [];
+    for (let i = 0; i < count; i++) {
+      next += 1;
+      const t = {
+        id: genId('TABLE'),
+        number: next,
+        name: `Table ${next}`,
+        qrId: crypto.randomBytes(5).toString('hex'),
+        active: true,
+        createdAt: new Date().toISOString()
+      };
+      data.tables.push(t);
+      added.push(t);
+    }
+    await persist();
+    created(res, added.map((t) => tableView(t, req)), count === 1 ? 'Table added.' : `${count} tables added.`);
+  })
+);
+
+router.patch(
+  '/tables/:id',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const t = data.tables.find((x) => x.id === req.params.id);
+    if (!t) return fail(res, 404, 'Table not found.');
+    if (req.body.active !== undefined) t.active = !!req.body.active;
+    await persist();
+    ok(res, tableView(t, req), 'Table updated.');
+  })
+);
+
+// GET /api/admin/tables/:id/qr.svg[?download=1] — generated locally, no outside service.
+router.get(
+  '/tables/:id/qr.svg',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const t = data.tables.find((x) => x.id === req.params.id);
+    if (!t) return fail(res, 404, 'Table not found.');
+    const svg = await QRCode.toString(`${baseUrl(req)}/t/${t.qrId}`, { type: 'svg', margin: 2, errorCorrectionLevel: 'M' });
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'no-store');
+    if (req.query.download) res.setHeader('Content-Disposition', `attachment; filename="eastern-gate-${t.name.replace(/\s+/g, '-').toLowerCase()}-qr.svg"`);
+    res.status(200).send(svg);
+  })
+);
+
+/* ========================== Customer orders =========================== */
+
+// GET /api/admin/orders?status=active|new|preparing|ready|completed|cancelled&date=today|YYYY-MM-DD
+router.get(
+  '/orders',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const { status, date } = req.query;
+    let list = data.orders;
+    if (status === 'active') list = list.filter((o) => ACTIVE.includes(o.status));
+    else if (status) list = list.filter((o) => o.status === status);
+    if (date === 'today') list = list.filter((o) => o.date === todayStr());
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) list = list.filter((o) => o.date === date);
+    list = [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 500);
+    ok(res, list.map(staffView));
+  })
+);
+
+router.post(
+  '/orders/:id/cancel',
+  asyncHandler(async (req, res) => {
+    const data = getData();
+    const order = data.orders.find((o) => o.orderId === req.params.id);
+    if (!order) return fail(res, 404, 'Order not found.');
+    try {
+      changeOrderStatus(data, order, 'cancelled', { role: 'admin', fullName: 'Admin' });
+    } catch (err) {
+      return fail(res, err.status || 400, err.message);
+    }
+    await persist();
+    ok(res, staffView(order), 'Order cancelled.');
+  })
+);
+
 /* =============================== Sales ================================ */
 
 router.get(
   '/sales',
   asyncHandler(async (req, res) => {
     const data = getData();
-    const { from, to, seller, paymentMethod, status } = req.query;
+    const { from, to, seller, paymentMethod, status, search, date } = req.query;
 
     let list = data.sales;
+    if (date === 'today') list = list.filter((s) => s.date === todayStr());
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) list = list.filter((s) => s.date === date);
+    if (search) {
+      const q = String(search).trim().toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.transactionId.toLowerCase().includes(q) ||
+          (s.sellerName || '').toLowerCase().includes(q) ||
+          (s.tableName || '').toLowerCase().includes(q) ||
+          (s.items || []).some((i) => (i.name || '').toLowerCase().includes(q))
+      );
+    }
     if (from) list = list.filter((s) => s.date >= from);
     if (to) list = list.filter((s) => s.date <= to);
     if (seller) list = list.filter((s) => s.sellerId === seller);
@@ -312,7 +465,18 @@ router.get(
     const cashToday = completedToday.filter((s) => s.paymentMethod === 'cash');
     const momoToday = completedToday.filter((s) => s.paymentMethod === 'momo');
 
+    const activeOrders = data.orders.filter((o) => ACTIVE.includes(o.status));
+    const customerOrders = {
+      total: data.orders.length,
+      new: activeOrders.filter((o) => o.status === 'new').length,
+      preparing: activeOrders.filter((o) => o.status === 'preparing').length,
+      ready: activeOrders.filter((o) => o.status === 'ready').length,
+      completedToday: data.orders.filter((o) => o.status === 'completed' && (o.completedAt || '').slice(0, 10) === today).length,
+      cancelledToday: data.orders.filter((o) => o.status === 'cancelled' && (o.cancelledAt || '').slice(0, 10) === today).length
+    };
+
     ok(res, {
+      customerOrders,
       today: {
         revenue: todayRevenue,
         orders: completedToday.length,
@@ -382,7 +546,7 @@ router.get(
     const date = req.query.date || todayStr();
     const rows = data.sales.filter((s) => s.date === date).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    const header = ['Transaction ID', 'Date', 'Time', 'Seller', 'Items', 'Quantity', 'Total', 'Payment Method', 'Status'];
+    const header = ['Transaction ID', 'Date', 'Time', 'Seller', 'Table', 'Items', 'Quantity', 'Total', 'Payment Method', 'Status'];
     const lines = [header.join(',')];
 
     for (const sale of rows) {
@@ -396,6 +560,7 @@ router.get(
           sale.date,
           time,
           sale.sellerName,
+          sale.tableName || '',
           itemNames,
           totalQty,
           sale.total.toFixed(2),
